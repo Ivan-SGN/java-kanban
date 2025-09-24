@@ -1,8 +1,6 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import ru.yandex.javacourse.schedule.tasks.Task;
 
@@ -12,29 +10,85 @@ import ru.yandex.javacourse.schedule.tasks.Task;
  * @author Vladimir Ivanov (ivanov.vladimir.l@gmail.com)
  */
 public class InMemoryHistoryManager implements HistoryManager {
-	private final LinkedList<Task> history = new LinkedList<>();
+    private Node<Task> head;
+    private Node<Task> tail;
+    private final Map<Integer, Node<Task>> history = new HashMap<>();
 
-	public static final int MAX_SIZE = 10;
+    private static final class Node <T>{
+        private T data;
+        private Node<T> next;
+        private Node<T> prev;
 
-	@Override
+        public Node(T data){
+            this.data = data;
+        }
+    }
+
+    private void linkLast(Task task) {
+        Node<Task> newNode = new Node<>(task);
+        if (head == null){
+            head = newNode;
+        }
+        else {
+            tail.next = newNode;
+            newNode.prev = tail;
+        }
+        tail = newNode;
+    }
+
+    private ArrayList<Task> getTasks(){
+        ArrayList<Task> result = new ArrayList<>(history.size());
+        Node<Task> current = head;
+        while (current != null){
+            result.add(current.data);
+            current = current.next;
+        }
+        return result;
+    }
+
+    private void removeNode(Node<Task> node){
+        if (node == null){
+            return;
+        }
+        Node<Task> prev = node.prev;
+        Node<Task> next = node.next;
+        if (prev != null) {
+            prev.next = next;
+        } else {
+            head = next;
+        }
+        if (next != null) {
+            next.prev = prev;
+        } else {
+            tail = prev;
+        }
+        node.prev = null;
+        node.next = null;
+    }
+
+    @Override
 	public List<Task> getHistory() {
-		return new ArrayList<>(history);
+		return getTasks();
 	}
 
 	@Override
 	public void addTask(Task task) {
-		if (task == null) {
-			return;
-		}
-		history.add(task);
-		if (history.size() > MAX_SIZE) {
-			history.removeFirst();
-		}
-
-	}
+        if (task == null){
+            return;
+        }
+        Node<Task> duplicate = history.remove(task.getId());
+        if (duplicate != null) {
+            removeNode(duplicate);
+        }
+        linkLast(task);
+        history.put(task.getId(), tail);
+    }
 
     @Override
     public void remove(int id) {
-        history.removeIf(task -> task.getId() == id);
+        Node<Task> node = history.remove(id);
+        if(node != null){
+            removeNode(node);
+        }
     }
 }
