@@ -2,6 +2,9 @@ package ru.yandex.javacourse.schedule.tasks;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EpicTest {
@@ -28,5 +31,15 @@ public class EpicTest {
         Epic epic = new Epic(0, "Epic 1", "Testing epic 1");
         epic.addSubtaskId(0);
         assertEquals(0, epic.subtaskIds.size(), "epic should not add itself as subtask");
+    }
+
+    @Test
+    public void removeNonexistentSubtask() {
+        Epic epic = new Epic(0, "Epic 1", "Testing epic 1");
+        epic.addSubtaskId(1);
+        List<Integer> expected = new ArrayList<>(epic.subtaskIds);
+        epic.removeSubtask(2);
+        assertEquals(expected, epic.getSubtaskIds(), "epic should not change if nonexistent" +
+                " subtask was removed");
     }
 }
