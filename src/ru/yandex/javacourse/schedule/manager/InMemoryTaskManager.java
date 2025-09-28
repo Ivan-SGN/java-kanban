@@ -21,6 +21,20 @@ public class InMemoryTaskManager implements TaskManager {
 	private int generatorId = 0;
 	private final HistoryManager historyManager = Managers.getDefaultHistory();
 
+    private int assignOrValidateId(int requestedId) {
+        if (requestedId == 0) {
+            return ++generatorId;
+        }
+        if (requestedId <= generatorId) {
+            throw new IllegalArgumentException(
+                    "Predefined id must be greater than current sequence (generatorId=" + generatorId + "): " + requestedId);
+        }
+        if (tasks.containsKey(requestedId) || epics.containsKey(requestedId) || subtasks.containsKey(requestedId)) {
+            throw new IllegalArgumentException("Id already exists: " + requestedId);
+        }
+        generatorId = requestedId;
+        return requestedId;
+    }
 
 	@Override
 	public ArrayList<Task> getTasks() {
@@ -73,35 +87,34 @@ public class InMemoryTaskManager implements TaskManager {
 
 	@Override
 	public int addNewTask(Task task) {
-		final int id = ++generatorId;
-		task.setId(id);
-		tasks.put(id, task);
-		return id;
-	}
+        final int id = assignOrValidateId(task.getId());
+        task.setId(id);
+        tasks.put(id, task);
+        return id;
+    }
 
 	@Override
 	public int addNewEpic(Epic epic) {
-		final int id = ++generatorId;
-		epic.setId(id);
-		epics.put(id, epic);
-		return id;
-
-	}
+        final int id = assignOrValidateId(epic.getId());
+        epic.setId(id);
+        epics.put(id, epic);
+        return id;
+    }
 
 	@Override
 	public Integer addNewSubtask(Subtask subtask) {
-		final int epicId = subtask.getEpicId();
-		Epic epic = epics.get(epicId);
-		if (epic == null) {
-			return null;
-		}
-		final int id = ++generatorId;
-		subtask.setId(id);
-		subtasks.put(id, subtask);
-		epic.addSubtaskId(subtask.getId());
-		updateEpicStatus(epicId);
-		return id;
-	}
+        final int epicId = subtask.getEpicId();
+        final Epic epic = epics.get(epicId);
+        if (epic == null) {
+            return null;
+        }
+        final int id = assignOrValidateId(subtask.getId());
+        subtask.setId(id);
+        subtasks.put(id, subtask);
+        epic.addSubtaskId(id);
+        updateEpicStatus(epicId);
+        return id;
+    }
 
 	@Override
 	public void updateTask(Task task) {
