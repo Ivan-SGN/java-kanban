@@ -16,9 +16,7 @@ public class SubtaskTest {
 
     @Test
     public void testNotSelfAttaching() {
-        assertThrows(IllegalStateException.class, () -> new Subtask(1, "Subtask 1", "Testing subtask 1", TaskStatus.NEW, 1),
+        assertThrows(IllegalArgumentException.class, () -> new Subtask(1, "Subtask 1", "Testing subtask 1", TaskStatus.NEW, 1),
                 "subtask cannot be attached to itself");
     }
-
-
 }
