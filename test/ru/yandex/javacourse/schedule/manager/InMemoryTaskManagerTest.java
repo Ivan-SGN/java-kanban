@@ -2,8 +2,12 @@ package ru.yandex.javacourse.schedule.manager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.javacourse.schedule.tasks.Epic;
+import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,17 +82,37 @@ public class InMemoryTaskManagerTest {
 
 
     @Test
-    public void checkTaskNotChangedAfterAddTask() {
+    public void testTaskNotChangedAfterAddTask() {
         int id = 1;
         String name = "Test 1";
         String description = "Testing task 1";
         TaskStatus status = TaskStatus.NEW;
-        Task task1before = new Task(id, name, description, status);
-        manager.addNewTask(task1before);
-        Task task1after = manager.getTask(task1before.getId());
-        assertEquals(task1after.getId(), id);
-        assertEquals(task1after.getDescription(), description);
-        assertEquals(task1after.getStatus(), status);
-        assertEquals(task1after.getName(), name);
+        Task taskBefore = new Task(id, name, description, status);
+        manager.addNewTask(taskBefore);
+        Task taskAfter = manager.getTask(taskBefore.getId());
+        assertEquals(taskAfter.getId(), id);
+        assertEquals(taskAfter.getDescription(), description);
+        assertEquals(taskAfter.getStatus(), status);
+        assertEquals(taskAfter.getName(), name);
+    }
+
+    @Test
+    void testDeletedSubtaskRemovesFromEpic() {
+        Epic epic = new Epic("Epic 1", "Testing epic 1");
+        int epicId = manager.addNewEpic(epic);
+        int subtask1 = manager.addNewSubtask(new Subtask("S1", "Testing Subtask 1", TaskStatus.NEW, epicId));
+        manager.addNewSubtask(new Subtask("S2", "Testing Subtask 2", TaskStatus.NEW, epicId));
+        manager.deleteSubtask(subtask1);
+        List<Integer> ids = manager.getEpic(epicId).getSubtaskIds();
+        assertFalse(ids.contains(subtask1), "epic must not keep removed subtask id");
+    }
+
+    @Test
+    void testDeleteEpicRemovesEpicAndAllItsSubtasks() {
+        int epic = manager.addNewEpic(new Epic("E", "d"));
+        manager.addNewSubtask(new Subtask("S1", "Testing Subtask 1", TaskStatus.NEW, epic));
+        manager.addNewSubtask(new Subtask("S2", "Testing Subtask 1", TaskStatus.NEW, epic));
+        manager.deleteEpic(epic);
+        assertTrue(manager.getSubtasks().isEmpty(), "subtasks map must be empty after epic removal");
     }
 }
