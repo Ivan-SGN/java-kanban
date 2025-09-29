@@ -8,18 +8,19 @@ import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InMemoryHistoryManagerTest {
 
     HistoryManager historyManager;
 
     @BeforeEach
-    public void initHistoryManager(){
+    public void initHistoryManager() {
         historyManager = Managers.getDefaultHistory();
     }
 
-    private Task newTask (int id){
+    private Task newTask(int id) {
         return new Task(id, "Task " + id, "Testing task% " + id, TaskStatus.NEW);
     }
 
@@ -32,7 +33,7 @@ public class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void testTaskOrder(){
+    public void testTaskOrder() {
         List<Task> expectedTaskList = new LinkedList<>();
         for (int i = 0; i < 2; i++) {
             expectedTaskList.addLast(newTask(i));
@@ -44,7 +45,7 @@ public class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void testDuplicateTask(){
+    public void testDuplicateTask() {
         List<Task> expectedTaskList = new LinkedList<>();
         for (int i = 0; i < 2; i++) {
             expectedTaskList.addLast(newTask(i));
@@ -57,7 +58,7 @@ public class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void testRemoveTask(){
+    public void testRemoveTask() {
         List<Task> expectedTaskList = new LinkedList<>();
         final int taskCount = 10;
         for (int i = 0; i < taskCount + 1; i++) {
@@ -74,7 +75,7 @@ public class InMemoryHistoryManagerTest {
         historyManager.remove(taskCount);
         assertEquals(expectedTaskList, historyManager.getHistory(), "Last element in history " +
                 "should be removed from tail");
-        Task removeTask = expectedTaskList.get(taskCount/2);
+        Task removeTask = expectedTaskList.get(taskCount / 2);
         expectedTaskList.remove(removeTask);
         historyManager.remove(removeTask.getId());
         assertEquals(expectedTaskList, historyManager.getHistory(), "Middle element in history " +
@@ -82,7 +83,7 @@ public class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void testHistoricVersions(){
+    public void testHistoricVersions() {
         Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
         historyManager.addTask(task);
         assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
@@ -93,14 +94,14 @@ public class InMemoryHistoryManagerTest {
     }
 
     @Test
-    public void testHistoricVersionsByPointer(){
+    public void testHistoricVersionsByPointer() {
         Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
         historyManager.addTask(task);
-        assertEquals(task.getStatus(), historyManager.getHistory().get(0).getStatus(), "historic task " +
+        assertEquals(task.getStatus(), historyManager.getHistory().getFirst().getStatus(), "historic task " +
                 "should be stored");
         task.setStatus(TaskStatus.IN_PROGRESS);
         historyManager.addTask(task);
-        assertEquals(TaskStatus.IN_PROGRESS, historyManager.getHistory().get(0).getStatus(), "history should " +
+        assertEquals(TaskStatus.IN_PROGRESS, historyManager.getHistory().getFirst().getStatus(), "history should " +
                 "store latest state if task added twice");
     }
 

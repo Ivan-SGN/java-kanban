@@ -16,7 +16,7 @@ public class InMemoryTaskManagerTest {
     TaskManager manager;
 
     @BeforeEach
-    public void initManager(){
+    public void initManager() {
         manager = Managers.getDefault();
     }
 
@@ -25,23 +25,23 @@ public class InMemoryTaskManagerTest {
         Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
         manager.addNewTask(task);
         assertEquals(1, manager.getTasks().size(), "task should be added");
-        Task addedTask = manager.getTasks().get(0);
+        Task addedTask = manager.getTasks().getFirst();
         assertEquals(task, addedTask, "added task id should be set");
         Task byIdTask = manager.getTask(task.getId());
         assertEquals(task, byIdTask, "added task id should be found");
     }
 
     @Test
-    public void testAddTaskWithId(){
+    public void testAddTaskWithId() {
         Task task = new Task(42, "Test 1", "Testing task 1", TaskStatus.NEW);
         manager.addNewTask(task);
         assertEquals(1, manager.getTasks().size(), "task should be added");
-        Task addedTask = manager.getTasks().get(0);
+        Task addedTask = manager.getTasks().getFirst();
         assertEquals(task, addedTask, "predefined task id should be set");
     }
 
     @Test
-    public void testAddTaskWithAndWithoutId(){
+    public void testAddTaskWithAndWithoutId() {
         Task task0 = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
         Task task1 = new Task(2, "Test 2", "Testing task 2", TaskStatus.NEW);
         manager.addNewTask(task0);
@@ -53,7 +53,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testUpdateGenerator() {
-        Task task0 = new Task(10,"Test 1", "Testing task 1", TaskStatus.NEW);
+        Task task0 = new Task(10, "Test 1", "Testing task 1", TaskStatus.NEW);
         Task task1 = new Task("Test 2", "Test 2", TaskStatus.NEW);
         manager.addNewTask(task0);
         manager.addNewTask(task1);
@@ -62,7 +62,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testPredefinedIdLessOrEqualGeneratorThrows() {
-        Task task0 = new Task(2,"Test 1", "Testing task 1", TaskStatus.NEW);
+        Task task0 = new Task(2, "Test 1", "Testing task 1", TaskStatus.NEW);
         manager.addNewTask(task0);
         Task conflict = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW);
         assertThrows(IllegalArgumentException.class,
@@ -72,7 +72,7 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testPredefinedIdCollisionMapThrows() {
-        Task task = new Task(1,"Test 1", "Testing task 1", TaskStatus.NEW);
+        Task task = new Task(1, "Test 1", "Testing task 1", TaskStatus.NEW);
         manager.addNewTask(task);
         Task conflict = new Task(1, "Test 2", "Testing task 2", TaskStatus.NEW);
         assertThrows(IllegalArgumentException.class,
@@ -90,10 +90,10 @@ public class InMemoryTaskManagerTest {
         Task taskBefore = new Task(id, name, description, status);
         manager.addNewTask(taskBefore);
         Task taskAfter = manager.getTask(taskBefore.getId());
-        assertEquals(taskAfter.getId(), id);
-        assertEquals(taskAfter.getDescription(), description);
-        assertEquals(taskAfter.getStatus(), status);
-        assertEquals(taskAfter.getName(), name);
+        assertEquals(id, taskAfter.getId());
+        assertEquals(description, taskAfter.getDescription());
+        assertEquals(status, taskAfter.getStatus());
+        assertEquals(name, taskAfter.getName());
     }
 
     @Test

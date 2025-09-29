@@ -1,8 +1,11 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import java.util.*;
-
 import ru.yandex.javacourse.schedule.tasks.Task;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * In memory history manager.
@@ -14,40 +17,39 @@ public class InMemoryHistoryManager implements HistoryManager {
     private Node<Task> tail;
     private final Map<Integer, Node<Task>> history = new HashMap<>();
 
-    private static final class Node <T>{
+    private static final class Node<T> {
         private final T data;
         private Node<T> next;
         private Node<T> prev;
 
-        public Node(T data){
+        public Node(T data) {
             this.data = data;
         }
     }
 
     private void linkLast(Task task) {
         Node<Task> newNode = new Node<>(task);
-        if (head == null){
+        if (head == null) {
             head = newNode;
-        }
-        else {
+        } else {
             tail.next = newNode;
             newNode.prev = tail;
         }
         tail = newNode;
     }
 
-    private ArrayList<Task> getTasks(){
+    private ArrayList<Task> getTasks() {
         ArrayList<Task> result = new ArrayList<>(history.size());
         Node<Task> current = head;
-        while (current != null){
+        while (current != null) {
             result.add(current.data);
             current = current.next;
         }
         return result;
     }
 
-    private void removeNode(Node<Task> node){
-        if (node == null){
+    private void removeNode(Node<Task> node) {
+        if (node == null) {
             return;
         }
         Node<Task> prev = node.prev;
@@ -67,13 +69,13 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-	public List<Task> getHistory() {
-		return getTasks();
-	}
+    public List<Task> getHistory() {
+        return getTasks();
+    }
 
-	@Override
-	public void addTask(Task task) {
-        if (task == null){
+    @Override
+    public void addTask(Task task) {
+        if (task == null) {
             return;
         }
         Node<Task> duplicate = history.remove(task.getId());
@@ -87,7 +89,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void remove(int id) {
         Node<Task> node = history.remove(id);
-        if(node != null){
+        if (node != null) {
             removeNode(node);
         }
     }
