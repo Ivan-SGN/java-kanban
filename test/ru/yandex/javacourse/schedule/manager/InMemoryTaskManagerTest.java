@@ -100,8 +100,8 @@ public class InMemoryTaskManagerTest {
     void testDeletedSubtaskRemovesFromEpic() {
         Epic epic = new Epic("Epic 1", "Testing epic 1");
         int epicId = manager.addNewEpic(epic);
-        int subtask1 = manager.addNewSubtask(new Subtask("S1", "Testing Subtask 1", TaskStatus.NEW, epicId));
-        manager.addNewSubtask(new Subtask("S2", "Testing Subtask 2", TaskStatus.NEW, epicId));
+        int subtask1 = manager.addNewSubtask(new Subtask("Subtask 1", "Testing subtask 1", TaskStatus.NEW, epicId));
+        manager.addNewSubtask(new Subtask("Subtask 2", "Testing subtask 2", TaskStatus.NEW, epicId));
         manager.deleteSubtask(subtask1);
         List<Integer> ids = manager.getEpic(epicId).getSubtaskIds();
         assertFalse(ids.contains(subtask1), "epic must not keep removed subtask id");
@@ -109,10 +109,59 @@ public class InMemoryTaskManagerTest {
 
     @Test
     void testDeleteEpicRemovesEpicAndAllItsSubtasks() {
-        int epic = manager.addNewEpic(new Epic("E", "d"));
-        manager.addNewSubtask(new Subtask("S1", "Testing Subtask 1", TaskStatus.NEW, epic));
-        manager.addNewSubtask(new Subtask("S2", "Testing Subtask 1", TaskStatus.NEW, epic));
+        int epic = manager.addNewEpic(new Epic("Epic 1", "Testing epic 1"));
+        manager.addNewSubtask(new Subtask("Subtask 1", "Testing subtask 1", TaskStatus.NEW, epic));
+        manager.addNewSubtask(new Subtask("Subtask 2", "Testing subtask 2", TaskStatus.NEW, epic));
         manager.deleteEpic(epic);
         assertTrue(manager.getSubtasks().isEmpty(), "subtasks map must be empty after epic removal");
     }
+
+    @Test
+    void testTaskBecomesImmutableAfterAdd() {
+        Task task = new Task("Task 1", "Testing task 1", TaskStatus.NEW);
+        int id = manager.addNewTask(task);
+        assertThrows(IllegalStateException.class, () -> task.setName("Task 2"), "name must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> task.setDescription("Testing task 2"),
+                "description must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> task.setStatus(TaskStatus.IN_PROGRESS),
+                "status must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> task.setId(id + 1),
+                "id must be immutable after add");
+    }
+
+    @Test
+    void testSubtaskBecomesImmutableAfterAdd() {
+        int epicId = manager.addNewEpic(new Epic("Epic 1", "Testing epic 1"));
+        Subtask subtask = new Subtask("Subtask 1", "Testing subtask 1", TaskStatus.NEW, epicId);
+        int subtaskId = manager.addNewSubtask(subtask);
+        assertEquals(subtaskId, subtask.getId(), "precondition: id assigned");
+
+        assertThrows(IllegalStateException.class, () -> subtask.setName("Subtask 2"),
+                "name must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> subtask.setDescription("Testing subtask 2"),
+                "description must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> subtask.setStatus(TaskStatus.DONE),
+                "status must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> subtask.setId(subtaskId + 1),
+                "id must be immutable after add");
+        // Если у Subtask есть публичный setEpicId, раскомментируй следующую строку:
+        // assertThrows(IllegalStateException.class, () -> s.setEpicId(epicId + 1), "epicId must be immutable after add");
+    }
+
+    @Test
+    void testEpicBecomesImmutableAfterAdd() {
+        Epic epic = new Epic("Epic 1", "Testing epic 1");
+        int epicId = manager.addNewEpic(epic);
+        assertEquals(epicId, epic.getId(), "precondition: id assigned");
+
+        assertThrows(IllegalStateException.class, () -> epic.setName("Epic 2"),
+                "name must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> epic.setDescription("Testing epic 2"),
+                "description must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> epic.setStatus(TaskStatus.IN_PROGRESS),
+                "status must be immutable after add");
+        assertThrows(IllegalStateException.class, () -> epic.setId(epicId + 1),
+                "id must be immutable after add");
+    }
+
 }
