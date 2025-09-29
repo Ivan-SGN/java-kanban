@@ -55,7 +55,7 @@ public class Task {
         ensureMutable();
         this.status = status;
     }
- 
+
     public String getDescription() {
         return description;
     }
