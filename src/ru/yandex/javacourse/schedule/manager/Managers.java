@@ -6,11 +6,11 @@ package ru.yandex.javacourse.schedule.manager;
  * @author Vladimir Ivanov (ivanov.vladimir.l@gmail.com)
  */
 public class Managers {
-	public static TaskManager getDefault() {
-		return new InMemoryTaskManager();
-	}
+    public static TaskManager getDefault() {
+        return new FileBackedTaskManager("/Users/ivanmakarov/dev/java-kanban/storage.csv");
+    }
 
-	public static HistoryManager getDefaultHistory() {
-		return new InMemoryHistoryManager();
-	}
+    public static HistoryManager getDefaultHistory() {
+        return new InMemoryHistoryManager();
+    }
 }
