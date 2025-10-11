@@ -1,5 +1,6 @@
 package ru.yandex.javacourse.schedule.manager;
 
+import ru.yandex.javacourse.schedule.exceptions.ManagerSaveException;
 import ru.yandex.javacourse.schedule.tasks.*;
 
 import java.io.BufferedReader;
@@ -53,10 +54,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             if (Files.notExists(path)) {
                 Files.createFile(this.path);
             } else {
-                load();
+                loadFromFile();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Error due initialization file: " +
+                    this.path.getFileName(), e);
         }
     }
 
@@ -139,29 +141,25 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         List<String> lines = new ArrayList<>();
         lines.add(CSV_COLUMNS);
         for (Task task : getTasks()) {
-            lines.add(taskToCsv(task));
+            lines.add(taskTostring(task));
         }
         for (Epic epic : getEpics()) {
-            lines.add(taskToCsv(epic));
+            lines.add(taskTostring(epic));
         }
         for (Subtask subtask : getSubtasks()) {
-            lines.add(taskToCsv(subtask));
+            lines.add(taskTostring(subtask));
         }
         writeAllLines(lines);
     }
 
-    private void load() {
-        List<String> lines = new ArrayList<>();
-        lines = readAllLines();
-        if (lines.isEmpty()) {
+    private void loadFromFile() {
+        List<String> lines = readAllLines();
+        if (lines.isEmpty() || lines.getFirst().equals(CSV_COLUMNS)) {
             return;
         }
-        int headerRawIndex = 0;
-        if (lines.getFirst().equals(CSV_COLUMNS)) {
-            headerRawIndex = 1;
-        }
+        int headerRawIndex = 1;
         for (int i = headerRawIndex; i < lines.size(); i++) {
-            Task task = csvToTask(lines.get(i));
+            Task task = stringToTask(lines.get(i));
             if (task instanceof Subtask) {
                 super.addNewSubtask((Subtask) task);
             } else if (task instanceof Epic) {
@@ -185,7 +183,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 fileWriter.newLine();
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Error due writing to file: " +
+                    this.path.getFileName(), e);
         }
     }
 
@@ -198,11 +197,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
             return result;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ManagerSaveException("Error due reading from file: " +
+                    this.path.getFileName(), e);
         }
     }
 
-    private static String taskToCsv(Task task) {
+    private static String taskTostring(Task task) {
         TaskType type;
         String epic = CSV_NULL_SYMBOL;
         if (task instanceof Subtask) {
@@ -223,7 +223,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         );
     }
 
-    private static Task csvToTask(String line) {
+    private static Task stringToTask(String line) {
         String[] data = line.split(CSV_DELIMITER, -1);
         int id = Integer.parseInt(data[Column.ID.ordinal()]);
         TaskType type = TaskType.valueOf(data[Column.TYPE.ordinal()]);
