@@ -13,14 +13,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final String CSV_DELIMITER = ",";
     private static final String CSV_NULL_SYMBOL = "";
-    private static final String CSV_COLUMNS = buildHeader();
     private final Path path;
+    private static final Map<Column, Integer> CSV_COLUMNS = new HashMap<>();
+
+    static {
+        CSV_COLUMNS.put(Column.ID, 0);
+        CSV_COLUMNS.put(Column.TYPE, 1);
+        CSV_COLUMNS.put(Column.NAME, 2);
+        CSV_COLUMNS.put(Column.STATUS, 3);
+        CSV_COLUMNS.put(Column.DESCRIPTION, 4);
+        CSV_COLUMNS.put(Column.EPIC, 5);
+    }
 
     private enum Column {
         ID("id"),
@@ -29,7 +40,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         STATUS("status"),
         DESCRIPTION("description"),
         EPIC("epic");
-
         final String key;
 
         Column(String key) {
@@ -39,11 +49,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private static String buildHeader() {
         StringBuilder stringBuilder = new StringBuilder();
-        for (Column c : Column.values()) {
+        for (Column column : Column.values()) {
             if (!stringBuilder.isEmpty()) {
                 stringBuilder.append(CSV_DELIMITER);
             }
-            stringBuilder.append(c.key);
+            stringBuilder.append(column.key);
         }
         return stringBuilder.toString();
     }
@@ -139,15 +149,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         List<String> lines = new ArrayList<>();
-        lines.add(CSV_COLUMNS);
+        lines.add(buildHeader());
         for (Task task : getTasks()) {
-            lines.add(taskTostring(task));
+            lines.add(taskToString(task));
         }
         for (Epic epic : getEpics()) {
-            lines.add(taskTostring(epic));
+            lines.add(taskToString(epic));
         }
         for (Subtask subtask : getSubtasks()) {
-            lines.add(taskTostring(subtask));
+            lines.add(taskToString(subtask));
         }
         writeAllLines(lines);
     }
@@ -157,19 +167,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         if (lines.isEmpty()) {
             return;
         }
-        int headerRawIndex = 0;
-        if (lines.getFirst().equals(CSV_COLUMNS)) {
-            headerRawIndex = 1;
-        }
-        for (int i = headerRawIndex; i < lines.size(); i++) {
+        int start = lines.getFirst().equals(buildHeader()) ? 1 : 0;
+        List<Subtask> tempSubtasks = new ArrayList<>();
+        for (int i = start; i < lines.size(); i++) {
             Task task = stringToTask(lines.get(i));
             if (task instanceof Subtask) {
-                super.addNewSubtask((Subtask) task);
+                tempSubtasks.add((Subtask) task);
             } else if (task instanceof Epic) {
                 super.addNewEpic((Epic) task);
             } else {
                 super.addNewTask(task);
             }
+        }
+        for (Subtask subtask : tempSubtasks) {
+            super.addNewSubtask(subtask);
         }
     }
 
@@ -180,7 +191,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.WRITE)) {
-
             for (String line : lines) {
                 fileWriter.write(line);
                 fileWriter.newLine();
@@ -205,7 +215,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    private static String taskTostring(Task task) {
+    private static String taskToString(Task task) {
+        String[] row = new String[CSV_COLUMNS.size()];
         TaskType type;
         String epic = CSV_NULL_SYMBOL;
         if (task instanceof Subtask) {
@@ -216,23 +227,22 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         } else {
             type = TaskType.TASK;
         }
-        return String.join(",",
-                String.valueOf(task.getId()),
-                type.toString(),
-                task.getName(),
-                task.getStatus().name(),
-                task.getDescription(),
-                epic
-        );
+        row[CSV_COLUMNS.get(Column.ID)] = String.valueOf(task.getId());
+        row[CSV_COLUMNS.get(Column.TYPE)] = type.name();
+        row[CSV_COLUMNS.get(Column.NAME)] = task.getName();
+        row[CSV_COLUMNS.get(Column.STATUS)] = task.getStatus().name();
+        row[CSV_COLUMNS.get(Column.DESCRIPTION)] = task.getDescription();
+        row[CSV_COLUMNS.get(Column.EPIC)] = epic;
+        return String.join(CSV_DELIMITER, row);
     }
 
     private static Task stringToTask(String line) {
         String[] data = line.split(CSV_DELIMITER, -1);
-        int id = Integer.parseInt(data[Column.ID.ordinal()]);
-        TaskType type = TaskType.valueOf(data[Column.TYPE.ordinal()]);
-        String name = data[Column.NAME.ordinal()];
-        String statusStr = data[Column.STATUS.ordinal()];
-        String description = data[Column.DESCRIPTION.ordinal()];
+        int id = Integer.parseInt(data[CSV_COLUMNS.get(Column.ID)]);
+        TaskType type = TaskType.valueOf(data[CSV_COLUMNS.get(Column.TYPE)]);
+        String name = data[CSV_COLUMNS.get(Column.NAME)];
+        String statusStr = data[CSV_COLUMNS.get(Column.STATUS)];
+        String description = data[CSV_COLUMNS.get(Column.DESCRIPTION)];
         TaskStatus status = TaskStatus.valueOf(statusStr);
         switch (type) {
             case TASK:
@@ -240,7 +250,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             case EPIC:
                 return new Epic(id, name, description);
             case SUBTASK:
-                int epicId = Integer.parseInt(data[Column.EPIC.ordinal()]);
+                int epicId = Integer.parseInt(data[CSV_COLUMNS.get(Column.EPIC)]);
                 return new Subtask(id, name, description, status, epicId);
             default:
                 throw new IllegalArgumentException("Unknown task type: " + type);
