@@ -154,10 +154,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void loadFromFile() {
         List<String> lines = readAllLines();
-        if (lines.isEmpty() || lines.getFirst().equals(CSV_COLUMNS)) {
+        if (lines.isEmpty()) {
             return;
         }
-        int headerRawIndex = 1;
+        int headerRawIndex = 0;
+        if (lines.getFirst().equals(CSV_COLUMNS)) {
+            headerRawIndex = 1;
+        }
         for (int i = headerRawIndex; i < lines.size(); i++) {
             Task task = stringToTask(lines.get(i));
             if (task instanceof Subtask) {
