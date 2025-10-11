@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -111,25 +112,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private void save() {
         List<String> lines = new ArrayList<>();
         lines.add(csvSerializer.buildHeader());
-        for (Task task : getTasks()) {
-            lines.add(csvSerializer.taskToString(task));
-        }
-        for (Epic epic : getEpics()) {
-            lines.add(csvSerializer.taskToString(epic));
-        }
-        for (Subtask subtask : getSubtasks()) {
-            lines.add(csvSerializer.taskToString(subtask));
-        }
+        getTasks().stream()
+                .sorted(Comparator.comparingInt(Task::getId))
+                .forEach(task -> lines.add(csvSerializer.taskToString(task)));
+        getEpics().stream()
+                .sorted(Comparator.comparingInt(Epic::getId))
+                .forEach(epic -> lines.add(csvSerializer.taskToString(epic)));
+        getSubtasks().stream()
+                .sorted(Comparator.comparingInt(Subtask::getId))
+                .forEach(subtask -> lines.add(csvSerializer.taskToString(subtask)));
         try {
             FileWorker.writeAllLines(path, lines);
         } catch (IOException e) {
-            throw new ManagerSaveException("Error due writing to file: " +
-                    path.getFileName(), e);
+            throw new ManagerSaveException("Error due writing to file: " + path.getFileName(), e);
         }
     }
 
     private void loadFromFile() {
-        List<String> lines = null;
+        List<String> lines;
         try {
             lines = FileWorker.readAllLines(path);
         } catch (IOException e) {
