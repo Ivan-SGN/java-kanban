@@ -80,7 +80,6 @@ public class InMemoryTaskManagerTest {
                 "should throw on id collision across maps");
     }
 
-
     @Test
     public void testTaskNotChangedAfterAddTask() {
         int id = 1;
@@ -144,8 +143,6 @@ public class InMemoryTaskManagerTest {
                 "status must be immutable after add");
         assertThrows(IllegalStateException.class, () -> subtask.setId(subtaskId + 1),
                 "id must be immutable after add");
-        // Если у Subtask есть публичный setEpicId, раскомментируй следующую строку:
-        // assertThrows(IllegalStateException.class, () -> s.setEpicId(epicId + 1), "epicId must be immutable after add");
     }
 
     @Test

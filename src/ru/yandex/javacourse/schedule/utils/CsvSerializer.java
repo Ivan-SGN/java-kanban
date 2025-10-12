@@ -5,7 +5,7 @@ import ru.yandex.javacourse.schedule.tasks.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class csvSerializer {
+public class CsvSerializer {
     private static final String CSV_DELIMITER = ",";
     private static final String CSV_NULL_SYMBOL = "";
     private static final Map<Column, Integer> CSV_COLUMNS = new HashMap<>();

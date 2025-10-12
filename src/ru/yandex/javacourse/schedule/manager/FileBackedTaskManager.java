@@ -4,13 +4,12 @@ import ru.yandex.javacourse.schedule.exceptions.ManagerSaveException;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
+import ru.yandex.javacourse.schedule.utils.CsvSerializer;
 import ru.yandex.javacourse.schedule.utils.FileWorker;
-import ru.yandex.javacourse.schedule.utils.csvSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -18,8 +17,8 @@ import java.util.List;
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final Path path;
 
-    public FileBackedTaskManager(String filePath) {
-        this.path = Paths.get(filePath);
+    public FileBackedTaskManager(Path filePath) {
+        this.path = filePath;
         try {
             if (Files.notExists(path)) {
                 Files.createFile(this.path);
@@ -111,16 +110,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         List<String> lines = new ArrayList<>();
-        lines.add(csvSerializer.buildHeader());
-        getTasks().stream()
-                .sorted(Comparator.comparingInt(Task::getId))
-                .forEach(task -> lines.add(csvSerializer.taskToString(task)));
-        getEpics().stream()
-                .sorted(Comparator.comparingInt(Epic::getId))
-                .forEach(epic -> lines.add(csvSerializer.taskToString(epic)));
-        getSubtasks().stream()
-                .sorted(Comparator.comparingInt(Subtask::getId))
-                .forEach(subtask -> lines.add(csvSerializer.taskToString(subtask)));
+        lines.add(CsvSerializer.buildHeader());
+        List<Task> allTasks = new ArrayList<>();
+        allTasks.addAll(getTasks());
+        allTasks.addAll(getEpics());
+        allTasks.addAll(getSubtasks());
+        allTasks.sort(Comparator.comparingInt(Task::getId));
+        for (Task task : allTasks) {
+            lines.add(CsvSerializer.taskToString(task));
+        }
         try {
             FileWorker.writeAllLines(path, lines);
         } catch (IOException e) {
@@ -139,20 +137,22 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         if (lines.isEmpty()) {
             return;
         }
-        int start = lines.getFirst().equals(csvSerializer.buildHeader()) ? 1 : 0;
-        List<Subtask> tempSubtasks = new ArrayList<>();
-        for (int i = start; i < lines.size(); i++) {
-            Task task = csvSerializer.stringToTask(lines.get(i));
+        String expectedHeader = CsvSerializer.buildHeader();
+        String actualHeader = lines.getFirst();
+        if (!actualHeader.equals(expectedHeader)) {
+            throw new ManagerSaveException("CSV header mismatch: expected '" + expectedHeader +
+                    "', found '" + actualHeader + "'");
+        }
+        int startLine = 1;
+        for (int i = startLine; i < lines.size(); i++) {
+            Task task = CsvSerializer.stringToTask(lines.get(i));
             if (task instanceof Subtask) {
-                tempSubtasks.add((Subtask) task);
+                super.addNewSubtask((Subtask) task);
             } else if (task instanceof Epic) {
                 super.addNewEpic((Epic) task);
             } else {
                 super.addNewTask(task);
             }
-        }
-        for (Subtask subtask : tempSubtasks) {
-            super.addNewSubtask(subtask);
         }
     }
 }
