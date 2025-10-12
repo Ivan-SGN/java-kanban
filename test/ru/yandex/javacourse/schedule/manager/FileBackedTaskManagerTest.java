@@ -160,14 +160,14 @@ class FileBackedTaskManagerTest {
 
     @Test
     void testGeneratorIdOrderAfterReload() {
-        int task = manager.addNewTask(new Task(1, "Task 1", "Description 1", TaskStatus.NEW));
+        manager.addNewTask(new Task(1, "Task 1", "Description 1", TaskStatus.NEW));
         TaskManager reloaded = new FileBackedTaskManager(file);
         int newTaskId = reloaded.addNewTask(new Task("Task 2", "Description 2", TaskStatus.DONE));
         assertEquals(2, newTaskId, "id generator should be consistent after reload");
     }
 
     @Test
-    void testSortingByIdBeforeSaving() throws IOException {
+    void testSortingByIdBeforeSaving() {
         int epicId1 = manager.addNewEpic(new Epic("Epic 1", "Epic description"));
         Integer subtaskId1 = manager.addNewSubtask(
                 new Subtask("Subtask 1", "Subtask description", TaskStatus.NEW, epicId1));
