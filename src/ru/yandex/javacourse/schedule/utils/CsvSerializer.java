@@ -46,18 +46,12 @@ public class CsvSerializer {
 
     public static String taskToString(Task task) {
         String[] row = new String[CSV_COLUMNS.size()];
-        TaskType type;
         String epic = CSV_NULL_SYMBOL;
-        if (task instanceof Subtask) {
-            type = TaskType.SUBTASK;
+        if (task.getType() == TaskType.SUBTASK) {
             epic = String.valueOf(((Subtask) task).getEpicId());
-        } else if (task instanceof Epic) {
-            type = TaskType.EPIC;
-        } else {
-            type = TaskType.TASK;
         }
         row[CSV_COLUMNS.get(Column.ID)] = String.valueOf(task.getId());
-        row[CSV_COLUMNS.get(Column.TYPE)] = type.name();
+        row[CSV_COLUMNS.get(Column.TYPE)] = task.getType().name();
         row[CSV_COLUMNS.get(Column.NAME)] = task.getName();
         row[CSV_COLUMNS.get(Column.STATUS)] = task.getStatus().name();
         row[CSV_COLUMNS.get(Column.DESCRIPTION)] = task.getDescription();

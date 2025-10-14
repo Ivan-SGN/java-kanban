@@ -146,12 +146,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         int startLine = 1;
         for (int i = startLine; i < lines.size(); i++) {
             Task task = CsvSerializer.stringToTask(lines.get(i));
-            if (task instanceof Subtask) {
-                super.addNewSubtask((Subtask) task);
-            } else if (task instanceof Epic) {
-                super.addNewEpic((Epic) task);
-            } else {
-                super.addNewTask(task);
+            switch (task.getType()) {
+                case SUBTASK -> super.addNewSubtask((Subtask) task);
+                case EPIC -> super.addNewEpic((Epic) task);
+                case TASK -> super.addNewTask(task);
             }
         }
     }
