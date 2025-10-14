@@ -11,7 +11,7 @@ import static ru.yandex.javacourse.schedule.tasks.TaskStatus.*;
 public class Main {
     public static void main(String[] args) {
 
-        TaskManager manager = Managers.getDefault();
+        TaskManager manager = Managers.getDefaultFileBacked();
 
         // Создание
         Task task1 = new Task("Task #1", "Task1 description", NEW);

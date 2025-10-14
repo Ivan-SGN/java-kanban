@@ -84,7 +84,7 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     public void testHistoricVersions() {
-        Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
         historyManager.addTask(task);
         assertEquals(1, historyManager.getHistory().size(), "historic task should be added");
         task.setStatus(TaskStatus.IN_PROGRESS);
@@ -95,7 +95,7 @@ public class InMemoryHistoryManagerTest {
 
     @Test
     public void testHistoricVersionsByPointer() {
-        Task task = new Task("Test 1", "Testiong task 1", TaskStatus.NEW);
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
         historyManager.addTask(task);
         assertEquals(task.getStatus(), historyManager.getHistory().getFirst().getStatus(), "historic task " +
                 "should be stored");
