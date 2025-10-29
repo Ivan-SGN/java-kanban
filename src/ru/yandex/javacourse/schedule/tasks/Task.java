@@ -27,6 +27,7 @@ public class Task {
         this.name = other.name;
         this.description = other.description;
         this.status = other.status;
+        this.managed = false;
     }
 
     public int getId() {
@@ -63,6 +64,10 @@ public class Task {
     public void setDescription(String description) {
         ensureMutable();
         this.description = description;
+    }
+
+    public TaskType getType() {
+        return TaskType.TASK;
     }
 
     public boolean isManaged() {
