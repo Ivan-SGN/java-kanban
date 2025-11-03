@@ -116,9 +116,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         allTasks.addAll(getEpics());
         allTasks.addAll(getSubtasks());
         allTasks.sort(Comparator.comparingInt(Task::getId));
-        for (Task task : allTasks) {
-            lines.add(CsvSerializer.taskToString(task));
-        }
+        allTasks.forEach(task -> lines.add(CsvSerializer.taskToString(task)));
         try {
             FileWorker.writeAllLines(path, lines);
         } catch (IOException e) {
