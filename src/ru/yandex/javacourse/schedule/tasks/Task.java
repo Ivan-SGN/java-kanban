@@ -1,5 +1,7 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -7,6 +9,8 @@ public class Task {
     protected String name;
     protected TaskStatus status;
     protected String description;
+    protected LocalDateTime startTime = null;
+    protected Duration duration;
     private boolean managed = false;
 
     public Task(int id, String name, String description, TaskStatus status) {
@@ -14,12 +18,14 @@ public class Task {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = Duration.ZERO;
     }
 
     public Task(String name, String description, TaskStatus status) {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = Duration.ZERO;
     }
 
     public Task(Task other) {
@@ -28,6 +34,7 @@ public class Task {
         this.description = other.description;
         this.status = other.status;
         this.managed = false;
+        this.duration = Duration.ZERO;
     }
 
     public int getId() {
@@ -81,6 +88,30 @@ public class Task {
     private void ensureMutable() {
         if (managed) {
             throw new IllegalStateException("Task is managed; fields are immutable outside manager");
+        }
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        if (startTime == null) {
+            return null;
+        } else {
+            return startTime.plusMinutes(duration.toMinutes());
         }
     }
 

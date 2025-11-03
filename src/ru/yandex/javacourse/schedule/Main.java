@@ -93,7 +93,7 @@ public class Main {
         for (Task epic : manager.getEpics()) {
             System.out.println(epic);
 
-//			System.out.println("--> Подзадачи эпика:");
+            System.out.println("--> Подзадачи эпика:");
             for (Task task : manager.getEpicSubtasks(epic.getId())) {
                 System.out.println("--> " + task);
             }
