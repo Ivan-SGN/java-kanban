@@ -30,7 +30,6 @@ public class Main {
         manager.addNewSubtask(subtask1);
         final Integer subtaskId2 = manager.addNewSubtask(subtask2);
         final Integer subtaskId3 = manager.addNewSubtask(subtask3);
-
         printAllTasks(manager);
 
         // Обновление
