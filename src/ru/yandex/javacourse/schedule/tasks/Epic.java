@@ -1,5 +1,6 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,10 @@ public class Epic extends Task {
 
     public Epic(int id, String name, String description) {
         super(id, name, description, NEW);
+    }
+
+    public Epic(int id, String name, String description, LocalDateTime startTime, Duration duration) {
+        super(id, name, description, NEW, startTime, duration);
     }
 
     public Epic(String name, String description) {

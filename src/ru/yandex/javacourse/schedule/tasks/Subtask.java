@@ -1,12 +1,23 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     protected int epicId;
 
     public Subtask(int id, String name, String description, TaskStatus status, int epicId) {
         super(id, name, description, status);
         if (id == epicId) {
-            throw new IllegalArgumentException("Subtask id must not equal epicId");
+            throw new IllegalArgumentException("SubtaskId id must not equal epicId");
+        }
+        this.epicId = epicId;
+    }
+
+    public Subtask(int id, String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration, int epicId) {
+        super(id, name, description, status, startTime, duration);
+        if (id == epicId) {
+            throw new IllegalArgumentException("SubtaskId id must not equal epicId");
         }
         this.epicId = epicId;
     }

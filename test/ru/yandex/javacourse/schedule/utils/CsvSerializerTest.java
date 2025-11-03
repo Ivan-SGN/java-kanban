@@ -7,7 +7,7 @@ import ru.yandex.javacourse.schedule.tasks.*;
 class CsvSerializerTest {
     @Test
     void testHeaderOrderBuilding() {
-        String expectedHeader = "id,type,name,status,description,epic";
+        String expectedHeader = "id,type,name,status,description,startTime,duration,epic";
         String actualHeader = CsvSerializer.buildHeader();
         Assertions.assertEquals(expectedHeader, actualHeader,
                 "Header must match declared column order: " + expectedHeader);
@@ -23,19 +23,19 @@ class CsvSerializerTest {
         String epicCsv = CsvSerializer.taskToString(epic);
         String subCsv = CsvSerializer.taskToString(subtask);
 
-        Assertions.assertEquals("1," + TaskType.TASK.name() + ",Task 1,NEW,Desc 1,",
+        Assertions.assertEquals("1," + TaskType.TASK.name() + ",Task 1,NEW,Desc 1,,0,",
                 taskCsv, "Task serialization is incorrect");
-        Assertions.assertEquals("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,",
+        Assertions.assertEquals("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,,0,",
                 epicCsv, "Epic serialization is incorrect");
-        Assertions.assertEquals("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,2",
+        Assertions.assertEquals("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,,0,2",
                 subCsv, "Subtask serialization is incorrect");
     }
 
     @Test
     void testCsvToTask() {
-        Task task = CsvSerializer.stringToTask("1," + TaskType.TASK.name() + ",Task 1,IN_PROGRESS,Desc 1,");
-        Task epic = CsvSerializer.stringToTask("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,");
-        Task subtask = CsvSerializer.stringToTask("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,2");
+        Task task = CsvSerializer.stringToTask("1," + TaskType.TASK.name() + ",Task 1,IN_PROGRESS,Desc 1,,0,");
+        Task epic = CsvSerializer.stringToTask("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,,0,");
+        Task subtask = CsvSerializer.stringToTask("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,,0,2");
 
         Assertions.assertEquals(1, task.getId(), "Task id must be parsed");
         Assertions.assertEquals("Task 1", task.getName(), "Task name must be parsed");
