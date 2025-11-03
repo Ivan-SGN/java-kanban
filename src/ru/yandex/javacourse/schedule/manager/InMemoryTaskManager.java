@@ -95,6 +95,9 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public int addNewTask(Task task) {
         final int id = assignOrValidateId(task.getId());
+        if (isTaskCrossOther(task)) {
+            throw new IllegalArgumentException("Task time crosses existing task");
+        }
         task.setId(id);
         tasks.put(id, task);
         if (task.getStartTime() != null) {
@@ -121,6 +124,9 @@ public class InMemoryTaskManager implements TaskManager {
             return null;
         }
         final int id = assignOrValidateId(subtask.getId());
+        if (isTaskCrossOther(subtask)) {
+            throw new IllegalArgumentException("Task time crosses existing task");
+        }
         subtask.setId(id);
         subtasks.put(id, subtask);
         if (subtask.getStartTime() != null) {
@@ -138,6 +144,9 @@ public class InMemoryTaskManager implements TaskManager {
         final Task old = tasks.get(id);
         if (old == null) {
             return;
+        }
+        if (isTaskCrossOther(task)) {
+            throw new IllegalArgumentException("Task time crosses existing task");
         }
         prioritizedTasks.remove(old);
         tasks.put(id, task);
@@ -169,6 +178,9 @@ public class InMemoryTaskManager implements TaskManager {
         final Epic newEpic = epics.get(newEpicId);
         if (newEpic == null) {
             return;
+        }
+        if (isTaskCrossOther(subtask)) {
+            throw new IllegalArgumentException("Task time crosses existing task");
         }
         prioritizedTasks.remove(saved);
         subtasks.put(id, subtask);
@@ -326,5 +338,21 @@ public class InMemoryTaskManager implements TaskManager {
                 .filter(Objects::nonNull)
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
+    }
+
+    private boolean isTaskCrossOther(Task task) {
+        return prioritizedTasks.stream().anyMatch(current -> areTasksCrossing(current, task));
+    }
+
+    private boolean areTasksCrossing(Task first, Task second) {
+        if (first.getStartTime() == null || first.getDuration().isZero()
+                || second.getStartTime() == null || second.getDuration().isZero()) {
+            return false;
+        }
+        LocalDateTime firstStart = first.getStartTime();
+        LocalDateTime firstEnd = first.getEndTime();
+        LocalDateTime secondStart = second.getStartTime();
+        LocalDateTime secondEnd = second.getEndTime();
+        return firstStart.isBefore(secondEnd) && secondStart.isBefore(firstEnd);
     }
 }
