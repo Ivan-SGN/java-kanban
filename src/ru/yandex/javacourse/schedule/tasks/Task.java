@@ -37,13 +37,21 @@ public class Task {
         this.duration = Duration.ZERO;
     }
 
+    public Task(String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
+    }
+
     public Task(Task other) {
         this.id = other.id;
         this.name = other.name;
         this.description = other.description;
         this.status = other.status;
         this.managed = false;
-        this.duration = Duration.ZERO;
+        this.duration = other.duration;
     }
 
     public int getId() {

@@ -92,7 +92,7 @@ public class CsvSerializer {
                 return new Epic(id, name, description);
             case SUBTASK:
                 int epicId = Integer.parseInt(data[CSV_COLUMNS.get(Column.EPIC)]);
-                return new Subtask(id, name, description, status, epicId);
+                return new Subtask(id, name, description, status, startTime, duration, epicId);
             default:
                 throw new IllegalArgumentException("Unknown task type: " + type);
         }

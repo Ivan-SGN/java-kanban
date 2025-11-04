@@ -4,7 +4,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.yandex.javacourse.schedule.tasks.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 class CsvSerializerTest {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
+
     @Test
     void testHeaderOrderBuilding() {
         String expectedHeader = "id,type,name,status,description,startTime,duration,epic";
@@ -15,32 +22,42 @@ class CsvSerializerTest {
 
     @Test
     void testTaskToCsv() {
-        Task task = new Task(1, "Task 1", "Desc 1", TaskStatus.NEW);
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        Task task = new Task(1, "Task 1", "Desc 1", TaskStatus.NEW, startTime, duration);
         Epic epic = new Epic(2, "Epic 2", "Desc 2");
-        Subtask subtask = new Subtask(3, "Sub 3", "Desc 3", TaskStatus.DONE, 2);
+        Subtask subtask = new Subtask(3, "Sub 3", "Desc 3", TaskStatus.DONE, startTime, duration, 2);
 
         String taskCsv = CsvSerializer.taskToString(task);
         String epicCsv = CsvSerializer.taskToString(epic);
         String subCsv = CsvSerializer.taskToString(subtask);
 
-        Assertions.assertEquals("1," + TaskType.TASK.name() + ",Task 1,NEW,Desc 1,,0,",
+        Assertions.assertEquals("1," + TaskType.TASK.name() + ",Task 1,NEW,Desc 1,"
+                        + startTime.format(DateTimeFormatter.ISO_DATE_TIME) + "," + duration.toMinutes() + ",",
                 taskCsv, "Task serialization is incorrect");
         Assertions.assertEquals("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,,0,",
                 epicCsv, "Epic serialization is incorrect");
-        Assertions.assertEquals("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,,0,2",
+        Assertions.assertEquals("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3," +
+                        startTime.format(DateTimeFormatter.ISO_DATE_TIME) + "," + duration.toMinutes() + ",2",
                 subCsv, "Subtask serialization is incorrect");
     }
 
     @Test
     void testCsvToTask() {
-        Task task = CsvSerializer.stringToTask("1," + TaskType.TASK.name() + ",Task 1,IN_PROGRESS,Desc 1,,0,");
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        Task task = CsvSerializer.stringToTask("1," + TaskType.TASK.name() + ",Task 1,IN_PROGRESS,Desc 1," +
+                startTime.format(DATE_TIME_FORMATTER) + "," + duration.toMinutes() + ",");
         Task epic = CsvSerializer.stringToTask("2," + TaskType.EPIC.name() + ",Epic 2,NEW,Desc 2,,0,");
-        Task subtask = CsvSerializer.stringToTask("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3,,0,2");
+        Task subtask = CsvSerializer.stringToTask("3," + TaskType.SUBTASK.name() + ",Sub 3,DONE,Desc 3," +
+                startTime.format(DATE_TIME_FORMATTER) + "," + duration.toMinutes() + ",2");
 
         Assertions.assertEquals(1, task.getId(), "Task id must be parsed");
         Assertions.assertEquals("Task 1", task.getName(), "Task name must be parsed");
         Assertions.assertEquals("Desc 1", task.getDescription(), "Task description must be parsed");
         Assertions.assertEquals(TaskStatus.IN_PROGRESS, task.getStatus(), "Task status must be parsed");
+        Assertions.assertEquals(startTime, task.getStartTime(), "Task status must be parsed");
+        Assertions.assertEquals(duration, task.getDuration(), "Task status must be parsed");
         Assertions.assertEquals(Task.class, task.getClass(), "Task type must be Task");
 
         Assertions.assertEquals(2, epic.getId(), "Epic id must be parsed");
@@ -53,6 +70,8 @@ class CsvSerializerTest {
         Assertions.assertEquals("Sub 3", subtask.getName(), "Subtask name must be parsed");
         Assertions.assertEquals("Desc 3", subtask.getDescription(), "Subtask description must be parsed");
         Assertions.assertEquals(TaskStatus.DONE, subtask.getStatus(), "Subtask status must be parsed");
+        Assertions.assertEquals(startTime, subtask.getStartTime(), "Task status must be parsed");
+        Assertions.assertEquals(duration, subtask.getDuration(), "Task status must be parsed");
         Assertions.assertEquals(Subtask.class, subtask.getClass(), "Subtask type must be Subtask");
         Assertions.assertEquals(2, ((Subtask) subtask).getEpicId(), "Subtask epicId must be parsed");
     }

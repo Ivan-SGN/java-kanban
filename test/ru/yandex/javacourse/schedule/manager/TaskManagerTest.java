@@ -7,6 +7,8 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -25,7 +27,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void testAddTask() {
-        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW);
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        Task task = new Task("Test 1", "Testing task 1", TaskStatus.NEW, startTime, duration);
         manager.addNewTask(task);
         assertEquals(1, manager.getTasks().size(), "task should be added");
         Task addedTask = manager.getTasks().getFirst();
@@ -193,4 +197,64 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(TaskStatus.IN_PROGRESS, manager.getEpic(epicNewAndDoneId).getStatus(), "status must be IN_PROGRESS");
         assertEquals(TaskStatus.IN_PROGRESS, manager.getEpic(epicInProgressId).getStatus(), "status must be IN_PROGRESS");
     }
+
+    @Test
+    void testTaskComputeEndTime() {
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        Task taskWithTime = new Task("Task 1", "Testing task 1", TaskStatus.NEW, startTime, duration);
+        Task taskNoStart = new Task("Task 2", "Testing task 2", TaskStatus.NEW);
+        int taskIdWithTime = manager.addNewTask(taskWithTime);
+        int taskIdNoStart = manager.addNewTask(taskNoStart);
+
+        Task loadedWithTime = manager.getTask(taskIdWithTime);
+        Task loadedNoStart = manager.getTask(taskIdNoStart);
+
+        assertEquals(LocalDateTime.parse(startTime.toString()).plusMinutes(duration.toMinutes()), loadedWithTime.getEndTime(),
+                "end time must be start + duration");
+        assertEquals(Duration.ZERO, taskNoStart.getDuration(), "default duration must be zero");
+        assertNull(loadedNoStart.getEndTime(), "end time must be null when start is null");
+    }
+
+    @Test
+    void testSubtaskComputeEndTime() {
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 2, 14, 0);
+        Duration duration = Duration.ofMinutes(120);
+        int epicId = manager.addNewEpic(new Epic("Epic 1", "Testing epic 1"));
+        Subtask subtaskWithTime = new Subtask("Subtask 1", "Testing subtask 1",
+                TaskStatus.NEW, startTime, duration, epicId);
+        Subtask subtaskNoStart = new Subtask("Subtask 2", "Testing subtask 2",
+                TaskStatus.NEW, epicId);
+
+        Integer idWithTime = manager.addNewSubtask(subtaskWithTime);
+        Integer idNoStart = manager.addNewSubtask(subtaskNoStart);
+        Subtask loadedWithTime = manager.getSubtask(idWithTime);
+        Subtask loadedNoStart = manager.getSubtask(idNoStart);
+
+        assertEquals(startTime.plusMinutes(duration.toMinutes()), loadedWithTime.getEndTime(),
+                "end time must be start + duration");
+        assertEquals(Duration.ZERO, loadedNoStart.getDuration(), "default duration must be zero");
+        assertNull(loadedNoStart.getEndTime(), "end time must be null when start is null");
+    }
+
+    @Test
+    void testEpicComputeTimes() {
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 3, 9, 30);
+        Duration duration = Duration.ofMinutes(45);
+        int epicId = manager.addNewEpic(new Epic("Epic 1", "Testing epic 1"));
+
+        Epic epicInitial = manager.getEpic(epicId);
+        manager.addNewSubtask(new Subtask("Subtask 1", "Testing subtask 1",
+                TaskStatus.NEW, startTime, duration, epicId));
+        Epic epicAfter = manager.getEpic(epicId);
+
+        assertNull(epicInitial.getStartTime(), "epic start must be null with no subtasks");
+        assertNull(epicInitial.getEndTime(), "epic end must be null with no subtasks");
+        assertEquals(Duration.ZERO, epicInitial.getDuration(), "epic duration must be zero with no subtasks");
+        assertEquals(startTime, epicAfter.getStartTime(), "epic start must equal earliest subtask start");
+        assertEquals(startTime.plusMinutes(duration.toMinutes()), epicAfter.getEndTime(),
+                "epic end must equal latest subtask end");
+        assertEquals(duration, epicAfter.getDuration(), "epic duration must equal sum of subtask durations");
+    }
+
 }
