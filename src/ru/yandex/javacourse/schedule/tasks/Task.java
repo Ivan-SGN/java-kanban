@@ -50,8 +50,9 @@ public class Task {
         this.name = other.name;
         this.description = other.description;
         this.status = other.status;
-        this.managed = false;
         this.duration = other.duration;
+        this.startTime = other.getStartTime();
+        this.managed = false;
     }
 
     public int getId() {

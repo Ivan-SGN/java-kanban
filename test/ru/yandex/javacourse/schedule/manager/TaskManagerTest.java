@@ -199,6 +199,19 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
+    void testSubtaskHasLinkedEpic() {
+        Epic epic = new Epic("Epic Linked", "Epic with linked subtasks");
+        int epicId = manager.addNewEpic(epic);
+        Subtask subtask = new Subtask("Subtask 1", "Linked to epic", TaskStatus.NEW, epicId);
+        int subtaskId = manager.addNewSubtask(subtask);
+
+        Subtask loaded = manager.getSubtask(subtaskId);
+        assertEquals(epicId, loaded.getEpicId(), "subtask must retain reference to its epic");
+        Epic loadedEpic = manager.getEpic(epicId);
+        assertTrue(loadedEpic.getSubtaskIds().contains(subtaskId), "epic must list its subtasks");
+    }
+
+    @Test
     void testTaskComputeEndTime() {
         LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
         Duration duration = Duration.ofMinutes(90);
@@ -257,4 +270,45 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         assertEquals(duration, epicAfter.getDuration(), "epic duration must equal sum of subtask durations");
     }
 
+    @Test
+    void testNoTimeOverlapBetweenTasks() {
+        LocalDateTime start1 = LocalDateTime.of(2025, 1, 1, 10, 0);
+        LocalDateTime start2 = LocalDateTime.of(2025, 1, 1, 10, 30);
+        Duration duration = Duration.ofMinutes(60);
+
+        Task task1 = new Task("Task 1", "First", TaskStatus.NEW, start1, duration);
+        Task task2 = new Task("Task 2", "Overlap", TaskStatus.NEW, start2, duration);
+
+        manager.addNewTask(task1);
+        assertThrows(IllegalArgumentException.class,
+                () -> manager.addNewTask(task2),
+                "second task overlaps first — must throw or reject");
+    }
+
+    @Test
+    void testGetPrioritizedTasksOrder() {
+        LocalDateTime t1 = LocalDateTime.of(2025, 1, 1, 9, 0);
+        LocalDateTime t2 = LocalDateTime.of(2025, 1, 1, 11, 0);
+        LocalDateTime t3 = LocalDateTime.of(2025, 1, 1, 15, 0);
+        Duration d1 = Duration.ofMinutes(60);
+        Duration d2 = Duration.ofMinutes(30);
+        Duration d3 = Duration.ofMinutes(90);
+        Task task = new Task("Task 1", "Testing order", TaskStatus.NEW, t2, d2);
+        int epicId = manager.addNewEpic(new Epic("Epic 1", "For subtasks"));
+        Subtask subtask = new Subtask("Subtask 1", "Early subtask", TaskStatus.NEW, t1, d1, epicId);
+        Task lateTask = new Task("Task 2", "Later task", TaskStatus.NEW, t3, d3);
+        Task noTimeTask = new Task("Task 3", "No time set", TaskStatus.NEW);
+
+        manager.addNewTask(task);
+        manager.addNewSubtask(subtask);
+        manager.addNewTask(lateTask);
+        manager.addNewTask(noTimeTask);
+        List<Task> prioritized = manager.getPrioritizedTasks().stream().toList();
+
+        assertEquals(3, prioritized.size(), "prioritized list must exclude tasks without startTime");
+        assertFalse(prioritized.contains(noTimeTask), "tasks without startTime must not appear in prioritized list");
+        assertEquals(subtask, prioritized.get(0), "earliest start task must come first");
+        assertEquals(task, prioritized.get(1), "middle start task must come second");
+        assertEquals(lateTask, prioritized.get(2), "latest start task must come last");
+    }
 }
