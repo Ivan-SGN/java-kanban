@@ -3,21 +3,16 @@ package ru.yandex.javacourse.schedule.manager;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * Default managers.
- *
- * @author Vladimir Ivanov (ivanov.vladimir.l@gmail.com)
- */
 public class Managers {
-    public static TaskManager getDefault() {
+    public static InMemoryTaskManager getDefaultInMemory() {
         return new InMemoryTaskManager();
     }
 
-    public static TaskManager getDefaultFileBacked() {
+    public static FileBackedTaskManager getDefaultFileBacked() {
         return new FileBackedTaskManager(Paths.get(System.getProperty("user.dir"), "dataNewFormat.csv"));
     }
 
-    public static TaskManager getFileBacked(Path filePath) {
+    public static FileBackedTaskManager getFileBacked(Path filePath) {
         return new FileBackedTaskManager(filePath);
     }
 

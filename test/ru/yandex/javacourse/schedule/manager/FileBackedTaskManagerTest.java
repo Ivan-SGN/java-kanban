@@ -1,6 +1,6 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.yandex.javacourse.schedule.tasks.Epic;
@@ -8,7 +8,6 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -17,18 +16,22 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
+class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
     @TempDir
-    static Path tempDir;
+    Path tempDir;
 
     Path file;
-    TaskManager manager;
 
-    @BeforeEach
-    void initManager() throws IOException {
-        file = Files.createTempFile(tempDir, "test-storage", ".csv");
-        manager = new FileBackedTaskManager(file);
+    @Override
+    protected FileBackedTaskManager createManager() {
+        try {
+            file = Files.createTempFile(tempDir, "test-storage", ".csv");
+        } catch (Exception e) {
+            Assertions.fail("cannot create temp file for FileBackedTaskManager", e);
+            throw new AssertionError(e);
+        }
+        return Managers.getFileBacked(file);
     }
 
     @Test
