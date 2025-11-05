@@ -8,7 +8,7 @@ import java.util.List;
 import static ru.yandex.javacourse.schedule.tasks.TaskStatus.NEW;
 
 public class Epic extends Task {
-    protected LocalDateTime endTime = null;
+    protected LocalDateTime endTime;
     protected ArrayList<Integer> subtaskIds = new ArrayList<>();
 
     public Epic(int id, String name, String description) {

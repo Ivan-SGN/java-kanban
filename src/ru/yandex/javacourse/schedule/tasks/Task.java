@@ -9,16 +9,12 @@ public class Task {
     protected String name;
     protected TaskStatus status;
     protected String description;
-    protected LocalDateTime startTime = null;
+    protected LocalDateTime startTime;
     protected Duration duration;
     private boolean managed = false;
 
     public Task(int id, String name, String description, TaskStatus status) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.duration = Duration.ZERO;
+        this(id, name, description, status, null, Duration.ZERO);
     }
 
     public Task(int id, String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
@@ -31,27 +27,15 @@ public class Task {
     }
 
     public Task(String name, String description, TaskStatus status) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.duration = Duration.ZERO;
+        this(0, name, description, status, null, Duration.ZERO);
     }
 
     public Task(String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.duration = duration;
-        this.startTime = startTime;
+        this(0, name, description, status, startTime, duration);
     }
 
     public Task(Task other) {
-        this.id = other.id;
-        this.name = other.name;
-        this.description = other.description;
-        this.status = other.status;
-        this.duration = other.duration;
-        this.startTime = other.getStartTime();
+        this(other.id, other.name, other.description, other.status, other.getStartTime(), other.duration);
         this.managed = false;
     }
 

@@ -100,9 +100,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         task.setId(id);
         tasks.put(id, task);
-        if (task.getStartTime() != null) {
-            prioritizedTasks.add(task);
-        }
+        addToPrioritizedTasks(task);
         task.markAsManaged();
         return id;
     }
@@ -129,9 +127,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subtask.setId(id);
         subtasks.put(id, subtask);
-        if (subtask.getStartTime() != null) {
-            prioritizedTasks.add(subtask);
-        }
+        addToPrioritizedTasks(subtask);
         subtask.markAsManaged();
         epic.addSubtaskId(id);
         updateEpic(epicId);
@@ -150,9 +146,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         prioritizedTasks.remove(old);
         tasks.put(id, task);
-        if (task.getStartTime() != null) {
-            prioritizedTasks.add(task);
-        }
+        addToPrioritizedTasks(task);
         task.markAsManaged();
     }
 
@@ -184,9 +178,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         prioritizedTasks.remove(saved);
         subtasks.put(id, subtask);
-        if (subtask.getStartTime() != null) {
-            prioritizedTasks.add(subtask);
-        }
+        addToPrioritizedTasks(subtask);
         subtask.markAsManaged();
         if (oldEpicId != newEpicId) {
             final Epic oldEpic = epics.get(oldEpicId);
@@ -334,6 +326,12 @@ public class InMemoryTaskManager implements TaskManager {
                 .filter(Objects::nonNull)
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
+    }
+
+    private void addToPrioritizedTasks(Task task) {
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(task);
+        }
     }
 
     private boolean isTaskCrossOther(Task task) {
