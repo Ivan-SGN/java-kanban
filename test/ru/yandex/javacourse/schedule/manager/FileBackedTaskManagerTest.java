@@ -1,6 +1,6 @@
 package ru.yandex.javacourse.schedule.manager;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import ru.yandex.javacourse.schedule.tasks.Epic;
@@ -8,27 +8,32 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest {
+class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
     @TempDir
-    static Path tempDir;
+    Path tempDir;
 
     Path file;
-    TaskManager manager;
 
-    @BeforeEach
-    void initManager() throws IOException {
-        file = Files.createTempFile(tempDir, "test-storage", ".csv");
-        manager = new FileBackedTaskManager(file);
+    @Override
+    protected FileBackedTaskManager createManager() {
+        try {
+            file = Files.createTempFile(tempDir, "test-storage", ".csv");
+        } catch (Exception e) {
+            Assertions.fail("cannot create temp file for FileBackedTaskManager", e);
+            throw new AssertionError(e);
+        }
+        return Managers.getFileBacked(file);
     }
 
     @Test
@@ -40,7 +45,9 @@ class FileBackedTaskManagerTest {
 
     @Test
     void testSaveAndLoadTaskFromFile() {
-        Task task = new Task("Task 1", "Task description", TaskStatus.NEW);
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        Task task = new Task("Task 1", "Task description", TaskStatus.NEW, startTime, duration);
         int taskId = manager.addNewTask(task);
         TaskManager reloaded = new FileBackedTaskManager(file);
         Task loaded = reloaded.getTask(taskId);
@@ -48,15 +55,21 @@ class FileBackedTaskManagerTest {
         assertEquals("Task 1", loaded.getName(), "task name should persist");
         assertEquals("Task description", loaded.getDescription(), "task description should persist");
         assertEquals(TaskStatus.NEW, loaded.getStatus(), "task status should persist");
+        assertEquals(startTime, loaded.getStartTime(), "task startTime should persist");
+        assertEquals(duration, loaded.getDuration(), "task duration should persist");
     }
 
     @Test
     void testUpdateTaskFileBacked() {
-        int taskId = manager.addNewTask(new Task("Task 1", "Task description", TaskStatus.NEW));
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
+        int taskId = manager.addNewTask(new Task("Task 1", "Task description", TaskStatus.NEW, startTime, duration));
         Task updated = new Task(manager.getTask(taskId));
         updated.setName("Task 1 (updated)");
         updated.setDescription("Task description (updated)");
         updated.setStatus(TaskStatus.DONE);
+        updated.setStartTime(startTime.plus(duration));
+        updated.setDuration(duration.plus(duration));
         manager.updateTask(updated);
         TaskManager reloaded = new FileBackedTaskManager(file);
         Task loaded = reloaded.getTask(taskId);
@@ -64,6 +77,8 @@ class FileBackedTaskManagerTest {
         assertEquals("Task 1 (updated)", loaded.getName(), "name should persist after update");
         assertEquals("Task description (updated)", loaded.getDescription(), "description should persist after update");
         assertEquals(TaskStatus.DONE, loaded.getStatus(), "status should persist after update");
+        assertEquals(startTime.plus(duration), loaded.getStartTime(), "task startTime should persist");
+        assertEquals(duration.plus(duration), loaded.getDuration(), "task duration should persist");
     }
 
     @Test
@@ -114,8 +129,10 @@ class FileBackedTaskManagerTest {
 
     @Test
     void testSaveAndLoadSubtaskFromFile() {
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
         int epicId = manager.addNewEpic(new Epic("Epic 1", "Epic description"));
-        Subtask sub = new Subtask("Subtask 1", "Subtask description", TaskStatus.NEW, epicId);
+        Subtask sub = new Subtask("Subtask 1", "Subtask description", TaskStatus.NEW, startTime, duration, epicId);
         Integer subId = manager.addNewSubtask(sub);
         TaskManager reloaded = new FileBackedTaskManager(file);
         Subtask loaded = reloaded.getSubtask(subId);
@@ -125,17 +142,24 @@ class FileBackedTaskManagerTest {
         assertEquals("Subtask description", loaded.getDescription(), "subtask description should persist");
         assertEquals(TaskStatus.NEW, loaded.getStatus(), "subtask status should persist");
         assertEquals(epicId, loaded.getEpicId(), "subtask epicId should persist");
+        assertEquals(startTime, loaded.getStartTime(), "subtask startTime should persist");
+        assertEquals(duration, loaded.getDuration(), "subtask duration should persist");
         assertNotNull(loadedEpic, "linked epic should be present after reload");
     }
 
     @Test
     void testUpdateSubtaskFileBacked() {
+        LocalDateTime startTime = LocalDateTime.of(2025, 1, 1, 9, 0);
+        Duration duration = Duration.ofMinutes(90);
         int epicId = manager.addNewEpic(new Epic("Epic 1", "Epic description"));
-        int subtaskId = manager.addNewSubtask(new Subtask("Subtask 1", "Subtask description", TaskStatus.NEW, epicId));
+        int subtaskId = manager.addNewSubtask(new Subtask("Subtask 1", "Subtask description",
+                TaskStatus.NEW, startTime, duration, epicId));
         Subtask updated = new Subtask(manager.getSubtask(subtaskId));
         updated.setName("Subtask 1 (updated)");
         updated.setDescription("Subtask description (updated)");
         updated.setStatus(TaskStatus.DONE);
+        updated.setStartTime(startTime.plus(duration));
+        updated.setDuration(duration.plus(duration));
         manager.updateSubtask(updated);
         TaskManager reloaded = new FileBackedTaskManager(file);
         Subtask loaded = reloaded.getSubtask(subtaskId);
@@ -143,6 +167,8 @@ class FileBackedTaskManagerTest {
         assertEquals("Subtask 1 (updated)", loaded.getName(), "name should persist after update");
         assertEquals("Subtask description (updated)", loaded.getDescription(), "description should persist after update");
         assertEquals(TaskStatus.DONE, loaded.getStatus(), "status should persist after update");
+        assertEquals(startTime.plus(duration), loaded.getStartTime(), "subtask startTime should update");
+        assertEquals(duration.plus(duration), loaded.getDuration(), "subtask duration should update");
         assertEquals(epicId, loaded.getEpicId(), "epicId should persist after update");
     }
 

@@ -24,3 +24,21 @@ hs_err_pid*
 
 #CSV files
 *.csv
+
+#idea
+.idea/
+*.iml
+
+# Build outputs
+/out/
+/target/
+/build/
+
+# Java
+*.class
+
+# OS
+.DS_Store
+
+# Logs
+*.log

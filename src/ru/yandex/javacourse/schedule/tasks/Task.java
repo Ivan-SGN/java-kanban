@@ -1,5 +1,7 @@
 package ru.yandex.javacourse.schedule.tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -7,26 +9,33 @@ public class Task {
     protected String name;
     protected TaskStatus status;
     protected String description;
+    protected LocalDateTime startTime;
+    protected Duration duration;
     private boolean managed = false;
 
     public Task(int id, String name, String description, TaskStatus status) {
+        this(id, name, description, status, null, Duration.ZERO);
+    }
+
+    public Task(int id, String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public Task(String name, String description, TaskStatus status) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
+        this(0, name, description, status, null, Duration.ZERO);
+    }
+
+    public Task(String name, String description, TaskStatus status, LocalDateTime startTime, Duration duration) {
+        this(0, name, description, status, startTime, duration);
     }
 
     public Task(Task other) {
-        this.id = other.id;
-        this.name = other.name;
-        this.description = other.description;
-        this.status = other.status;
+        this(other.id, other.name, other.description, other.status, other.getStartTime(), other.duration);
         this.managed = false;
     }
 
@@ -81,6 +90,30 @@ public class Task {
     private void ensureMutable() {
         if (managed) {
             throw new IllegalStateException("Task is managed; fields are immutable outside manager");
+        }
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getEndTime() {
+        if (startTime == null) {
+            return null;
+        } else {
+            return startTime.plusMinutes(duration.toMinutes());
         }
     }
 

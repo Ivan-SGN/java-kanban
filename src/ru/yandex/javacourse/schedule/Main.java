@@ -30,7 +30,6 @@ public class Main {
         manager.addNewSubtask(subtask1);
         final Integer subtaskId2 = manager.addNewSubtask(subtask2);
         final Integer subtaskId3 = manager.addNewSubtask(subtask3);
-
         printAllTasks(manager);
 
         // Обновление
@@ -93,7 +92,7 @@ public class Main {
         for (Task epic : manager.getEpics()) {
             System.out.println(epic);
 
-//			System.out.println("--> Подзадачи эпика:");
+            System.out.println("--> Подзадачи эпика:");
             for (Task task : manager.getEpicSubtasks(epic.getId())) {
                 System.out.println("--> " + task);
             }

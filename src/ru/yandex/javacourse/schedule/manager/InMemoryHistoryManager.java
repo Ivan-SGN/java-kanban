@@ -7,11 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * In memory history manager.
- *
- * @author Vladimir Ivanov (ivanov.vladimir.l@gmail.com)
- */
 public class InMemoryHistoryManager implements HistoryManager {
     private Node<Task> head;
     private Node<Task> tail;
