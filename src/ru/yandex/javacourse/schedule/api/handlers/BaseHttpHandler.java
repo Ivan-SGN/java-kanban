@@ -1,4 +1,4 @@
-package ru.yandex.javacourse.schedule.API;
+package ru.yandex.javacourse.schedule.api.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -38,7 +38,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
         }
     }
 
-    protected void sendText(HttpExchange httpExchange, String text, int statusCode) throws IOException {
+    private void sendText(HttpExchange httpExchange, String text, int statusCode) throws IOException {
         byte[] responseBytes = text.getBytes(CHARSET);
         httpExchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         httpExchange.sendResponseHeaders(statusCode, responseBytes.length);
