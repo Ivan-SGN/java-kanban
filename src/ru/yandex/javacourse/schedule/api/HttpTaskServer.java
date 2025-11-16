@@ -21,7 +21,7 @@ public class HttpTaskServer {
         this.taskManager = taskManager;
         this.gson = (GsonConfig.createGson());
         this.httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
-        httpServer.createContext("/tasks", new TaskHandler(taskManager, gson));
+        httpServer.createContext("/tasks", new TaskHandler(this.taskManager, gson));
     }
 
     public void start (){

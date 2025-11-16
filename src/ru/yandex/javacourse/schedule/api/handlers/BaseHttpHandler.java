@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class BaseHttpHandler implements HttpHandler {
     private final Charset CHARSET = StandardCharsets.UTF_8;
@@ -16,8 +18,16 @@ public abstract class BaseHttpHandler implements HttpHandler {
         sendText(httpExchange, text, 200);
     }
 
-    public void sendCreated(HttpExchange httpExchange) throws IOException {
-        sendText(httpExchange, "success", 201);
+    public void sendSuccess(HttpExchange httpExchange) throws IOException {
+        sendText(httpExchange, "Success", 201);
+    }
+
+    public void sendBadRequest(HttpExchange httpExchange) throws IOException {
+        sendText(httpExchange, "Bad Request", 400);
+    }
+
+    public void sendBadRequest(HttpExchange httpExchange, String message) throws IOException {
+        sendText(httpExchange, message, 400);
     }
 
     public void sendNotFound(HttpExchange httpExchange) throws IOException {
@@ -26,6 +36,14 @@ public abstract class BaseHttpHandler implements HttpHandler {
 
     public void sendHasInteractions(HttpExchange httpExchange) throws IOException {
         sendText(httpExchange, "Task has time intersection", 406);
+    }
+
+    public void sendInvalidId(HttpExchange httpExchange) throws IOException {
+        sendText(httpExchange, "Task id is invalid", 422);
+    }
+
+    protected void sendServerError(HttpExchange httpExchange, String message) throws IOException {
+        sendText(httpExchange, message, 500);
     }
 
     protected void sendServerError(HttpExchange httpExchange) throws IOException {
@@ -44,6 +62,20 @@ public abstract class BaseHttpHandler implements HttpHandler {
         httpExchange.sendResponseHeaders(statusCode, responseBytes.length);
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
+        }
+    }
+
+    protected Integer extractPathId(HttpExchange httpExchange, Pattern pathPattern) {
+        String requestPath = httpExchange.getRequestURI().getPath();
+        Matcher matcher = pathPattern.matcher(requestPath);
+        if (!matcher.matches()) {
+            return null;
+        }
+        String idText = matcher.group(1);
+        try {
+            return Integer.parseInt(idText);
+        } catch (NumberFormatException exception) {
+            return null;
         }
     }
 }
