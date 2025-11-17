@@ -16,8 +16,8 @@ public class EpicHandler extends BaseHttpHandler {
     private static final Pattern EPIC_ROOT_PATTERN = Pattern.compile("^/epics/?$");
     private static final Pattern EPIC_BY_ID_PATTERN = Pattern.compile("^/epics/(\\d+)$");
     private static final Pattern EPIC_BY_ID_SUBTASK_PATTERN = Pattern.compile("^/epics/(\\d+)/subtasks/?$");
-    TaskManager taskManager;
-    Gson gson;
+    private final TaskManager taskManager;
+    private final Gson gson;
 
     private record Route(String method, Pattern pattern, EpicEndpoint endpoint) {
     }
@@ -59,7 +59,7 @@ public class EpicHandler extends BaseHttpHandler {
         } catch (JsonSyntaxException exception) {
             sendBadRequest(exchange, "Invalid JSON");
         } catch (IllegalArgumentException exception) {
-            sendHasInteractions(exchange);
+            sendBadRequest(exchange);
         } catch (Exception exception) {
             sendServerError(exchange);
         }
@@ -99,7 +99,7 @@ public class EpicHandler extends BaseHttpHandler {
     private void handleGetSubtasksByEpicId(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, EPIC_BY_ID_SUBTASK_PATTERN);
         List<Subtask> subtasks = taskManager.getEpicSubtasks(id);
-        if (subtasks != null) {
+        if (subtasks != null || taskManager.getEpic(id) != null) {
             String response = gson.toJson(subtasks);
             sendText(exchange, response);
         } else {
@@ -116,7 +116,7 @@ public class EpicHandler extends BaseHttpHandler {
         }
         int epicId = epic.getId();
         if (epicId == 0) {
-            Integer createdEpicId = taskManager.addNewEpic(epic);
+            taskManager.addNewEpic(epic);
             sendSuccess(exchange);
         } else {
             Epic existingEpic = taskManager.getEpic(epicId);

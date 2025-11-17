@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 public class TaskHandler extends BaseHttpHandler {
     private static final Pattern TASK_ROOT_PATTERN = Pattern.compile("^/tasks/?$");
     private static final Pattern TASK_BY_ID_PATTERN = Pattern.compile("^/tasks/(\\d+)$");
-    TaskManager taskManager;
-    Gson gson;
+    private final TaskManager taskManager;
+    private final Gson gson;
 
     private record Route(String method, Pattern pattern, TaskEndpoint endpoint) {
     }

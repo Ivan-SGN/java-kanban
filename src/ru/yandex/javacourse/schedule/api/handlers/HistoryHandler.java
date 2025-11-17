@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class HistoryHandler extends BaseHttpHandler {
     private static final Pattern HISTORY_ROOT_PATTERN = Pattern.compile("^/history/?$");
-    TaskManager taskManager;
-    Gson gson;
+    private final TaskManager taskManager;
+    private final Gson gson;
 
     private record Route(String method, Pattern pattern, HistoryEndpoint endpoint) {
     }

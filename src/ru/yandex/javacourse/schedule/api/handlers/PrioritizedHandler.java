@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 public class PrioritizedHandler extends BaseHttpHandler {
     private static final Pattern PRIORITIZED_ROOT_PATTERN = Pattern.compile("^/prioritized/?$");
-    TaskManager taskManager;
-    Gson gson;
+    private final TaskManager taskManager;
+    private final Gson gson;
 
     private record Route(String method, Pattern pattern, PrioritizedEndpoint endpoint) {
     }

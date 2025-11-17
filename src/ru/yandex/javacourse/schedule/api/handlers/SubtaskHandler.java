@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 public class SubtaskHandler extends BaseHttpHandler {
     private static final Pattern SUBTASK_ROOT_PATTERN = Pattern.compile("^/subtasks/?$");
     private static final Pattern SUBTASK_BY_ID_PATTERN = Pattern.compile("^/subtasks/(\\d+)$");
-    TaskManager taskManager;
-    Gson gson;
+    private final TaskManager taskManager;
+    private final Gson gson;
 
     private record Route(String method, Pattern pattern, SubtaskEndpoint endpoint) {
     }
