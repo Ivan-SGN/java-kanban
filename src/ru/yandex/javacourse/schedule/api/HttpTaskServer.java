@@ -2,9 +2,7 @@ package ru.yandex.javacourse.schedule.api;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
-import ru.yandex.javacourse.schedule.api.handlers.EpicHandler;
-import ru.yandex.javacourse.schedule.api.handlers.SubtaskHandler;
-import ru.yandex.javacourse.schedule.api.handlers.TaskHandler;
+import ru.yandex.javacourse.schedule.api.handlers.*;
 import ru.yandex.javacourse.schedule.api.json.GsonConfig;
 import ru.yandex.javacourse.schedule.manager.Managers;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
@@ -26,6 +24,8 @@ public class HttpTaskServer {
         httpServer.createContext("/tasks", new TaskHandler(this.taskManager, gson));
         httpServer.createContext("/subtasks", new SubtaskHandler(this.taskManager, gson));
         httpServer.createContext("/epics", new EpicHandler(this.taskManager, gson));
+        httpServer.createContext("/history", new HistoryHandler(this.taskManager, gson));
+        httpServer.createContext("/prioritized", new PrioritizedHandler(this.taskManager, gson));
     }
 
     public void start() {
