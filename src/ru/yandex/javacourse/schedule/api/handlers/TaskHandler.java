@@ -1,6 +1,7 @@
 package ru.yandex.javacourse.schedule.api.handlers;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Task;
@@ -13,20 +14,24 @@ import java.util.regex.Pattern;
 public class TaskHandler extends BaseHttpHandler {
     private static final Pattern TASK_ROOT_PATTERN = Pattern.compile("^/tasks/?$");
     private static final Pattern TASK_BY_ID_PATTERN = Pattern.compile("^/tasks/(\\d+)$");
-    private record Route(String method, Pattern pattern, TaskEndpoint endpoint) {}
     TaskManager taskManager;
     Gson gson;
+
+    private record Route(String method, Pattern pattern, TaskEndpoint endpoint) {
+    }
 
     private final List<Route> routes = List.of(
             new Route("GET", TASK_ROOT_PATTERN, TaskEndpoint.GET_ALL_TASKS),
             new Route("GET", TASK_BY_ID_PATTERN, TaskEndpoint.GET_TASK_BY_ID),
-            new Route("POST", TASK_ROOT_PATTERN, TaskEndpoint.POST_TASK)
+            new Route("POST", TASK_ROOT_PATTERN, TaskEndpoint.POST_TASK),
+            new Route("DELETE", TASK_BY_ID_PATTERN, TaskEndpoint.DELETE_TASK_BY_ID)
     );
 
     private enum TaskEndpoint {
         GET_ALL_TASKS,
         GET_TASK_BY_ID,
         POST_TASK,
+        DELETE_TASK_BY_ID,
         UNKNOWN
     }
 
@@ -39,20 +44,17 @@ public class TaskHandler extends BaseHttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         TaskEndpoint endpoint = resolveEndpoint(exchange);
         try {
-            switch (endpoint){
+            switch (endpoint) {
                 case GET_ALL_TASKS -> handleGetAllTasks(exchange);
                 case GET_TASK_BY_ID -> handleGetTaskById(exchange);
                 case POST_TASK -> handlePostTask(exchange);
+                case DELETE_TASK_BY_ID -> handleDeleteTask(exchange);
                 case UNKNOWN -> sendNotFound(exchange);
             }
         } catch (JsonSyntaxException exception) {
             sendBadRequest(exchange, "Invalid JSON");
         } catch (IllegalArgumentException exception) {
-            if ("Task time crosses existing task".equals(exception.getMessage())) {
-                sendHasInteractions(exchange);
-            } else {
-                sendBadRequest(exchange, exception.getMessage());
-            }
+            sendHasInteractions(exchange);
         } catch (Exception exception) {
             sendServerError(exchange);
         }
@@ -79,9 +81,9 @@ public class TaskHandler extends BaseHttpHandler {
     }
 
     private void handleGetTaskById(HttpExchange exchange) throws IOException {
-        int id = extractPathId(exchange,TASK_BY_ID_PATTERN);
+        int id = extractPathId(exchange, TASK_BY_ID_PATTERN);
         Task task = taskManager.getTask(id);
-        if (task != null){
+        if (task != null) {
             String response = gson.toJson(task);
             sendText(exchange, response);
         } else {
@@ -100,14 +102,25 @@ public class TaskHandler extends BaseHttpHandler {
         if (taskId == 0) {
             taskManager.addNewTask(task);
             sendSuccess(exchange);
-        }
-        else {
+        } else {
             Task existingTask = taskManager.getTask(taskId);
             if (existingTask == null) {
                 sendNotFound(exchange);
                 return;
             }
             taskManager.updateTask(task);
+            sendSuccess(exchange);
+        }
+    }
+
+    private void handleDeleteTask(HttpExchange exchange) throws IOException {
+        int taskId = extractPathId(exchange, TASK_BY_ID_PATTERN);
+        Task task = taskManager.getTask(taskId);
+        if (task == null) {
+            sendNotFound(exchange);
+            return;
+        } else {
+            taskManager.deleteTask(taskId);
             sendSuccess(exchange);
         }
     }

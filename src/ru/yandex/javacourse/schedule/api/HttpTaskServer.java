@@ -2,6 +2,8 @@ package ru.yandex.javacourse.schedule.api;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpServer;
+import ru.yandex.javacourse.schedule.api.handlers.EpicHandler;
+import ru.yandex.javacourse.schedule.api.handlers.SubtaskHandler;
 import ru.yandex.javacourse.schedule.api.handlers.TaskHandler;
 import ru.yandex.javacourse.schedule.api.json.GsonConfig;
 import ru.yandex.javacourse.schedule.manager.Managers;
@@ -22,9 +24,11 @@ public class HttpTaskServer {
         this.gson = (GsonConfig.createGson());
         this.httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
         httpServer.createContext("/tasks", new TaskHandler(this.taskManager, gson));
+        httpServer.createContext("/subtasks", new SubtaskHandler(this.taskManager, gson));
+        httpServer.createContext("/epics", new EpicHandler(this.taskManager, gson));
     }
 
-    public void start (){
+    public void start() {
         httpServer.start();
         System.out.println("Server starts "
                 + "IP: " + httpServer.getAddress().getAddress() + " "
