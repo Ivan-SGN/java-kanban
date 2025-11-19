@@ -17,10 +17,10 @@ public class HttpTaskServer {
     private final Gson gson;
     private final HttpServer httpServer;
 
-    public HttpTaskServer(TaskManager taskManager) throws IOException {
+    public HttpTaskServer(TaskManager taskManager, int port) throws IOException {
         this.taskManager = taskManager;
         this.gson = (GsonConfig.createGson());
-        this.httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
+        this.httpServer = HttpServer.create(new InetSocketAddress(port), 0);
         httpServer.createContext("/tasks", new TaskHandler(this.taskManager, gson));
         httpServer.createContext("/subtasks", new SubtaskHandler(this.taskManager, gson));
         httpServer.createContext("/epics", new EpicHandler(this.taskManager, gson));
@@ -35,9 +35,13 @@ public class HttpTaskServer {
                 + "Port :" + httpServer.getAddress().getPort());
     }
 
+    public void stop() {
+        httpServer.stop(0);
+    }
+
     public static void main(String[] args) {
         try {
-            HttpTaskServer httpTaskServer = new HttpTaskServer(Managers.getDefaultFileBacked());
+            HttpTaskServer httpTaskServer = new HttpTaskServer(Managers.getDefaultFileBacked(), PORT);
             httpTaskServer.start();
         } catch (IOException e) {
             System.out.println("Failed to start HTTP server: " + e.getMessage());

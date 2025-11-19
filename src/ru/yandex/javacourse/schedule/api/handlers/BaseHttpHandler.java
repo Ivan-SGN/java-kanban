@@ -38,14 +38,6 @@ public abstract class BaseHttpHandler implements HttpHandler {
         sendText(httpExchange, "Task has time intersection", 406);
     }
 
-    public void sendInvalidId(HttpExchange httpExchange) throws IOException {
-        sendText(httpExchange, "Task id is invalid", 422);
-    }
-
-    protected void sendServerError(HttpExchange httpExchange, String message) throws IOException {
-        sendText(httpExchange, message, 500);
-    }
-
     protected void sendServerError(HttpExchange httpExchange) throws IOException {
         sendText(httpExchange, "Internal server error", 500);
     }
