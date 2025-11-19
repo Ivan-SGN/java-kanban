@@ -18,7 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubtaskHandlerTest extends HttpTaskServerTest {
-    private final String SUBTASK_URI = BASE_URL + "/subtasks";
+    private static final String SUBTASK_URI = BASE_URL + "/subtasks";
 
     @Test
     void testGetSubtasksEmpty() throws Exception {

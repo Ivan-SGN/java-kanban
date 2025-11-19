@@ -12,7 +12,7 @@ import java.net.http.HttpClient;
 
 public class HttpTaskServerTest {
     private static final int PORT = 8090;
-    protected final String BASE_URL = "http://localhost:" + PORT;
+    protected static final String BASE_URL = "http://localhost:" + PORT;
     protected TaskManager taskManager;
     protected HttpTaskServer httpTaskServer;
     protected HttpClient httpClient;

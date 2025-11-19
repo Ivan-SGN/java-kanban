@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicHandlerTest extends HttpTaskServerTest {
-    private final String EPIC_URI = BASE_URL + "/epics";
+    private static final String EPIC_URI = BASE_URL + "/epics";
 
     @Test
     void testGetEpicsEmpty() throws Exception {

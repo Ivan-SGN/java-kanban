@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class HistoryHandlerTest extends HttpTaskServerTest {
-    private final String HISTORY_URI = BASE_URL + "/history";
+    private static final String HISTORY_URI = BASE_URL + "/history";
 
     @Test
     void testGetHistoryEmpty() throws Exception {

@@ -12,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class BaseHttpHandler implements HttpHandler {
-    private final Charset CHARSET = StandardCharsets.UTF_8;
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     public void sendText(HttpExchange httpExchange, String text) throws IOException {
         sendText(httpExchange, text, 200);

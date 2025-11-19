@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class PrioritizedHandlerTest extends HttpTaskServerTest {
-    private final String PRIORITIZED_URI = BASE_URL + "/prioritized";
+    private static final String PRIORITIZED_URI = BASE_URL + "/prioritized";
 
     @Test
     void testGetPrioritizedEmpty() throws Exception {
