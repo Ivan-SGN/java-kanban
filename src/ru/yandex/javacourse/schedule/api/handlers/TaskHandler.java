@@ -118,7 +118,6 @@ public class TaskHandler extends BaseHttpHandler {
         Task task = taskManager.getTask(taskId);
         if (task == null) {
             sendNotFound(exchange);
-            return;
         } else {
             taskManager.deleteTask(taskId);
             sendSuccess(exchange);

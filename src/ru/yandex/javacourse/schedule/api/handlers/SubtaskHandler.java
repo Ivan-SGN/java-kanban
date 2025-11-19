@@ -103,7 +103,6 @@ public class SubtaskHandler extends BaseHttpHandler {
             Integer createdSubtaskId = taskManager.addNewSubtask(subtask);
             if (createdSubtaskId == null) {
                 sendNotFound(exchange);
-                return;
             } else {
                 sendSuccess(exchange);
             }
@@ -111,7 +110,6 @@ public class SubtaskHandler extends BaseHttpHandler {
             Subtask existingSubtask = taskManager.getSubtask(subtaskId);
             if (existingSubtask == null) {
                 sendNotFound(exchange);
-                return;
             }
             taskManager.updateSubtask(subtask);
             sendSuccess(exchange);

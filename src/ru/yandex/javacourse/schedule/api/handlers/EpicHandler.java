@@ -134,7 +134,6 @@ public class EpicHandler extends BaseHttpHandler {
         Epic task = taskManager.getEpic(epicId);
         if (task == null) {
             sendNotFound(exchange);
-            return;
         } else {
             taskManager.deleteEpic(epicId);
             sendSuccess(exchange);
