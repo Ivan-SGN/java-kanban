@@ -98,8 +98,9 @@ public class EpicHandler extends BaseHttpHandler {
 
     private void handleGetSubtasksByEpicId(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, EPIC_BY_ID_SUBTASK_PATTERN);
-        List<Subtask> subtasks = taskManager.getEpicSubtasks(id);
-        if (subtasks != null || taskManager.getEpic(id) != null) {
+        Epic epic = taskManager.getEpic(id);
+        if (epic != null) {
+            List<Subtask> subtasks = taskManager.getEpicSubtasks(id);
             String response = gson.toJson(subtasks);
             sendText(exchange, response);
         } else {

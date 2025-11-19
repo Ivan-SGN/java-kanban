@@ -95,9 +95,6 @@ public class SubtaskHandler extends BaseHttpHandler {
         String requestBody = readRequestBody(exchange);
         Subtask subtask;
         subtask = gson.fromJson(requestBody, Subtask.class);
-        if (subtask == null) {
-            throw new JsonSyntaxException("Request body is empty or invalid");
-        }
         int subtaskId = subtask.getId();
         if (subtaskId == 0) {
             Integer createdSubtaskId = taskManager.addNewSubtask(subtask);
@@ -121,7 +118,6 @@ public class SubtaskHandler extends BaseHttpHandler {
         Subtask task = taskManager.getSubtask(subtaskId);
         if (task == null) {
             sendNotFound(exchange);
-            return;
         } else {
             taskManager.deleteSubtask(subtaskId);
             sendSuccess(exchange);
