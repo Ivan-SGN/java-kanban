@@ -1,6 +1,7 @@
 package ru.yandex.javacourse.schedule.manager;
 
 import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
+import ru.yandex.javacourse.schedule.exceptions.TimeInteractionsException;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
@@ -98,7 +99,7 @@ public class InMemoryTaskManager implements TaskManager {
     public int addNewTask(Task task) {
         final int id = assignOrValidateId(task.getId());
         if (isTaskCrossOther(task)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         task.setId(id);
         tasks.put(id, task);
@@ -123,7 +124,7 @@ public class InMemoryTaskManager implements TaskManager {
         ensureFoundOrThrow(epic);
         final int id = assignOrValidateId(subtask.getId());
         if (isTaskCrossOther(subtask)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         subtask.setId(id);
         subtasks.put(id, subtask);
@@ -140,7 +141,7 @@ public class InMemoryTaskManager implements TaskManager {
         final Task old = tasks.get(id);
         ensureFoundOrThrow(old);
         if (isTaskCrossOther(task)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         prioritizedTasks.remove(old);
         tasks.put(id, task);

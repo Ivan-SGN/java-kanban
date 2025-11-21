@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
+import ru.yandex.javacourse.schedule.exceptions.TimeInteractionsException;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 
@@ -49,7 +50,7 @@ public class SubtaskHandler extends BaseHttpHandler {
             sendBadRequest(exchange, "Invalid JSON");
         } catch (NotFoundException exception) {
             sendNotFound(exchange, exception.getMessage());
-        } catch (IllegalArgumentException exception) {
+        } catch (TimeInteractionsException exception) {
             sendHasInteractions(exchange);
         } catch (Exception exception) {
             sendServerError(exchange);
