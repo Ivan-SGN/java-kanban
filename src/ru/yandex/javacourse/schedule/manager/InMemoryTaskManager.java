@@ -22,7 +22,8 @@ public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Subtask> subtasks = new HashMap<>();
     private final Set<Task> prioritizedTasks = new TreeSet<>(
             Comparator
-                    .comparing(Task::getStartTime)
+                    .comparing(Task::getStartTime,
+                            Comparator.nullsLast(LocalDateTime::compareTo))
                     .thenComparingInt(Task::getId));
     private int generatorId = 0;
     private final HistoryManager historyManager = Managers.getDefaultHistory();
@@ -190,7 +191,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTask(int id) {
         final Task task = tasks.remove(id);
         ensureFoundOrThrow(task);
-        prioritizedTasks.remove(tasks.remove(id));
+        prioritizedTasks.remove(task);
         historyManager.remove(id);
     }
 
