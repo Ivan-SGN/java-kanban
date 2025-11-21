@@ -11,7 +11,7 @@ public class Task {
     protected String description;
     protected LocalDateTime startTime;
     protected Duration duration;
-    private boolean managed = false;
+    private transient boolean managed = false;
 
     public Task(int id, String name, String description, TaskStatus status) {
         this(id, name, description, status, null, Duration.ZERO);

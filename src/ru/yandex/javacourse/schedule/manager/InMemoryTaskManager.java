@@ -1,5 +1,7 @@
 package ru.yandex.javacourse.schedule.manager;
 
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
+import ru.yandex.javacourse.schedule.exceptions.TimeInteractionsException;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
@@ -62,9 +64,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public ArrayList<Subtask> getEpicSubtasks(int epicId) {
         Epic epic = epics.get(epicId);
-        if (epic == null) {
-            return null;
-        }
+        ensureFoundOrThrow(epic);
         return epic.getSubtaskIds().stream()
                 .map(subtasks::get)
                 .filter(Objects::nonNull)
@@ -74,6 +74,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTask(int id) {
         final Task task = tasks.get(id);
+        ensureFoundOrThrow(task);
         historyManager.addTask(task);
         return task;
     }
@@ -81,6 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Subtask getSubtask(int id) {
         final Subtask subtask = subtasks.get(id);
+        ensureFoundOrThrow(subtask);
         historyManager.addTask(subtask);
         return subtask;
     }
@@ -88,6 +90,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic getEpic(int id) {
         final Epic epic = epics.get(id);
+        ensureFoundOrThrow(epic);
         historyManager.addTask(epic);
         return epic;
     }
@@ -96,7 +99,7 @@ public class InMemoryTaskManager implements TaskManager {
     public int addNewTask(Task task) {
         final int id = assignOrValidateId(task.getId());
         if (isTaskCrossOther(task)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         task.setId(id);
         tasks.put(id, task);
@@ -118,12 +121,10 @@ public class InMemoryTaskManager implements TaskManager {
     public Integer addNewSubtask(Subtask subtask) {
         final int epicId = subtask.getEpicId();
         final Epic epic = epics.get(epicId);
-        if (epic == null) {
-            return null;
-        }
+        ensureFoundOrThrow(epic);
         final int id = assignOrValidateId(subtask.getId());
         if (isTaskCrossOther(subtask)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         subtask.setId(id);
         subtasks.put(id, subtask);
@@ -138,11 +139,9 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         final int id = task.getId();
         final Task old = tasks.get(id);
-        if (old == null) {
-            return;
-        }
+        ensureFoundOrThrow(old);
         if (isTaskCrossOther(task)) {
-            throw new IllegalArgumentException("Task time crosses existing task");
+            throw new TimeInteractionsException("Task time crosses existing task");
         }
         prioritizedTasks.remove(old);
         tasks.put(id, task);
@@ -154,7 +153,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateEpic(Epic epic) {
         final int id = epic.getId();
         if (!epics.containsKey(id)) {
-            return;
+            throw new NotFoundException("epic not found");
         }
         epics.put(id, epic);
         epic.markAsManaged();
@@ -164,15 +163,11 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateSubtask(Subtask subtask) {
         final int id = subtask.getId();
         final Subtask saved = subtasks.get(id);
-        if (saved == null) {
-            return;
-        }
+        ensureFoundOrThrow(saved);
         final int oldEpicId = saved.getEpicId();
         final int newEpicId = subtask.getEpicId();
         final Epic newEpic = epics.get(newEpicId);
-        if (newEpic == null) {
-            return;
-        }
+        ensureFoundOrThrow(newEpic);
         if (isTaskCrossOther(subtask)) {
             throw new IllegalArgumentException("Task time crosses existing task");
         }
@@ -193,6 +188,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteTask(int id) {
+        final Task task = tasks.remove(id);
+        ensureFoundOrThrow(task);
         prioritizedTasks.remove(tasks.remove(id));
         historyManager.remove(id);
     }
@@ -200,9 +197,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteEpic(int id) {
         final Epic epic = epics.remove(id);
-        if (epic == null) {
-            return;
-        }
+        ensureFoundOrThrow(epic);
         historyManager.remove(id);
         epic.getSubtaskIds().forEach(subtaskId -> {
             Subtask removed = subtasks.remove(subtaskId);
@@ -214,9 +209,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteSubtask(int id) {
         Subtask subtask = subtasks.remove(id);
-        if (subtask == null) {
-            return;
-        }
+        ensureFoundOrThrow(subtask);
         prioritizedTasks.remove(subtask);
         historyManager.remove(id);
         Epic epic = epics.get(subtask.getEpicId());
@@ -348,5 +341,11 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime secondStart = second.getStartTime();
         LocalDateTime secondEnd = second.getEndTime();
         return firstStart.isBefore(secondEnd) && secondStart.isBefore(firstEnd);
+    }
+
+    private void ensureFoundOrThrow(Task task) {
+        if (task == null) {
+            throw new NotFoundException("epic not found");
+        }
     }
 }

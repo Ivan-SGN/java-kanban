@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.manager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.Task;
@@ -87,7 +88,9 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         manager.deleteTask(taskId);
 
         TaskManager reloaded = new FileBackedTaskManager(file);
-        assertNull(reloaded.getTask(taskId), "task should be absent after deletion and reload");
+        assertThrows(NotFoundException.class,
+                () -> reloaded.getTask(taskId),
+                "task should be absent after deletion and reload");
     }
 
     @Test
@@ -122,9 +125,12 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         Integer subId2 = manager.addNewSubtask(new Subtask("Subtask 2", "Subtask description", TaskStatus.NEW, epicId));
         manager.deleteEpic(epicId);
         TaskManager reloaded = new FileBackedTaskManager(file);
-        assertNull(reloaded.getEpic(epicId), "epic should be absent after deletion and reload");
-        assertNull(reloaded.getSubtask(subId1), "linked subtask should be removed with epic");
-        assertNull(reloaded.getSubtask(subId2), "linked subtask should be removed with epic");
+        assertThrows(NotFoundException.class,
+                () -> reloaded.getEpic(epicId), "epic should be absent after deletion and reload");
+        assertThrows(NotFoundException.class,
+                () -> reloaded.getSubtask(subId1), "linked subtask should be removed with epic");
+        assertThrows(NotFoundException.class,
+                () -> reloaded.getSubtask(subId2), "linked subtask should be removed with epic");
     }
 
     @Test
@@ -178,7 +184,8 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         Integer subId = manager.addNewSubtask(new Subtask("Subtask 1", "Subtask description", TaskStatus.NEW, epicId));
         manager.deleteSubtask(subId);
         TaskManager reloaded = new FileBackedTaskManager(file);
-        assertNull(reloaded.getSubtask(subId), "subtask should be absent after deletion and reload");
+        assertThrows(NotFoundException.class,
+                () -> reloaded.getSubtask(subId), "subtask should be absent after deletion and reload");
         Epic reloadedEpic = reloaded.getEpic(epicId);
         assertNotNull(reloadedEpic, "epic should still exist after subtask deletion");
         assertFalse(reloadedEpic.getSubtaskIds().contains(subId), "epic must not keep deleted subtask id");
