@@ -9,16 +9,12 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EpicHandler extends BaseHttpHandler {
     private static final Pattern EPIC_ROOT_PATTERN = Pattern.compile("^/epics/?$");
     private static final Pattern EPIC_BY_ID_PATTERN = Pattern.compile("^/epics/(\\d+)$");
     private static final Pattern EPIC_BY_ID_SUBTASK_PATTERN = Pattern.compile("^/epics/(\\d+)/subtasks/?$");
-
-    private record Route<EpicEndpoint>(String method, Pattern pattern, EpicEndpoint endpoint) {
-    }
 
     private final List<Route<EpicEndpoint>> routes = List.of(
             new Route<>("GET", EPIC_ROOT_PATTERN, EpicEndpoint.GET_ALL_EPICS),
@@ -43,7 +39,7 @@ public class EpicHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        EpicEndpoint endpoint = resolveEndpoint(exchange);
+        EpicEndpoint endpoint = resolveEndpoint(exchange, routes, EpicEndpoint.UNKNOWN);
         try {
             switch (endpoint) {
                 case GET_ALL_EPICS -> handleGetAllEpics(exchange);
@@ -60,20 +56,6 @@ public class EpicHandler extends BaseHttpHandler {
         } catch (Exception exception) {
             sendServerError(exchange);
         }
-    }
-
-    private EpicEndpoint resolveEndpoint(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        for (Route<EpicEndpoint> route : routes) {
-            if (route.method().equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern().matcher(path);
-                if (matcher.matches()) {
-                    return route.endpoint();
-                }
-            }
-        }
-        return EpicEndpoint.UNKNOWN;
     }
 
     private void handleGetAllEpics(HttpExchange exchange) throws IOException {

@@ -8,7 +8,6 @@ import ru.yandex.javacourse.schedule.tasks.Task;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TaskHandler extends BaseHttpHandler {
@@ -36,7 +35,7 @@ public class TaskHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        TaskEndpoint endpoint = resolveEndpoint(exchange);
+        TaskEndpoint endpoint = resolveEndpoint(exchange, routes, TaskEndpoint.UNKNOWN);
         try {
             switch (endpoint) {
                 case GET_ALL_TASKS -> handleGetAllTasks(exchange);
@@ -52,20 +51,6 @@ public class TaskHandler extends BaseHttpHandler {
         } catch (Exception exception) {
             sendServerError(exchange);
         }
-    }
-
-    private TaskEndpoint resolveEndpoint(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        for (Route<TaskEndpoint> route : routes) {
-            if (route.method().equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern().matcher(path);
-                if (matcher.matches()) {
-                    return route.endpoint();
-                }
-            }
-        }
-        return TaskEndpoint.UNKNOWN;
     }
 
     private void handleGetAllTasks(HttpExchange exchange) throws IOException {

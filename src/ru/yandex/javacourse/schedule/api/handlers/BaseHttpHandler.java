@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,6 +68,20 @@ public abstract class BaseHttpHandler implements HttpHandler {
         try (OutputStream outputStream = httpExchange.getResponseBody()) {
             outputStream.write(responseBytes);
         }
+    }
+
+    protected <E> E resolveEndpoint(HttpExchange httpExchange, List<Route<E>> routes, E defaultEndpoint) {
+        String method = httpExchange.getRequestMethod();
+        String path = httpExchange.getRequestURI().getPath();
+        for (Route<E> route : routes) {
+            if (route.method().equalsIgnoreCase(method)) {
+                Matcher matcher = route.pattern().matcher(path);
+                if (matcher.matches()) {
+                    return route.endpoint();
+                }
+            }
+        }
+        return defaultEndpoint;
     }
 
     protected Integer extractPathId(HttpExchange httpExchange, Pattern pathPattern) {

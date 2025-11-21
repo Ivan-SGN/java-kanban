@@ -8,15 +8,11 @@ import ru.yandex.javacourse.schedule.tasks.Subtask;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SubtaskHandler extends BaseHttpHandler {
     private static final Pattern SUBTASK_ROOT_PATTERN = Pattern.compile("^/subtasks/?$");
     private static final Pattern SUBTASK_BY_ID_PATTERN = Pattern.compile("^/subtasks/(\\d+)$");
-
-    private record Route<SubtaskEndpoint>(String method, Pattern pattern, SubtaskEndpoint endpoint) {
-    }
 
     private final List<Route<SubtaskEndpoint>> routes = List.of(
             new Route<>("GET", SUBTASK_ROOT_PATTERN, SubtaskEndpoint.GET_ALL_SUBTASKS),
@@ -39,7 +35,7 @@ public class SubtaskHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        SubtaskEndpoint endpoint = resolveEndpoint(exchange);
+        SubtaskEndpoint endpoint = resolveEndpoint(exchange, routes, SubtaskEndpoint.UNKNOWN);
         try {
             switch (endpoint) {
                 case GET_ALL_SUBTASKS -> handleGetAllSubtasks(exchange);
@@ -55,20 +51,6 @@ public class SubtaskHandler extends BaseHttpHandler {
         } catch (Exception exception) {
             sendServerError(exchange);
         }
-    }
-
-    private SubtaskEndpoint resolveEndpoint(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        for (Route<SubtaskEndpoint> route : routes) {
-            if (route.method().equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern().matcher(path);
-                if (matcher.matches()) {
-                    return route.endpoint();
-                }
-            }
-        }
-        return SubtaskEndpoint.UNKNOWN;
     }
 
     private void handleGetAllSubtasks(HttpExchange exchange) throws IOException {
