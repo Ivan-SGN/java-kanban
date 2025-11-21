@@ -47,6 +47,10 @@ public abstract class BaseHttpHandler implements HttpHandler {
         sendText(httpExchange, "Not Found", 404);
     }
 
+    public void sendNotFound(HttpExchange httpExchange, String message) throws IOException {
+        sendText(httpExchange, message, 404);
+    }
+
     public void sendHasInteractions(HttpExchange httpExchange) throws IOException {
         sendText(httpExchange, "Task has time intersection", 406);
     }

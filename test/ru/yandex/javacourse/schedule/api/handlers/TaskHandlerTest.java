@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.api.handlers;
 import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.Test;
 import ru.yandex.javacourse.schedule.api.HttpTaskServerTest;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.tasks.Task;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
 
@@ -179,7 +180,8 @@ class TaskHandlerTest extends HttpTaskServerTest {
         HttpResponse<String> response = httpClient.send(updateRequest, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode(), "POST /tasks must return 404 when updating missing task");
-        assertNull(taskManager.getTask(nonExistingId), "missing task must not appear in manager after failed update");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getTask(nonExistingId), "missing task must not appear in manager after failed update");
     }
 
     @Test
@@ -194,7 +196,8 @@ class TaskHandlerTest extends HttpTaskServerTest {
         HttpResponse<String> deleteExistingResponse = httpClient.send(deleteExistingRequest, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(201, deleteExistingResponse.statusCode(), "DELETE /tasks/{id} must return 201 on success");
-        assertNull(taskManager.getTask(taskId), "task must be removed from manager");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getTask(taskId), "task must be removed from manager");
     }
 
     @Test

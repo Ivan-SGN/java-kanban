@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.api.handlers;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 
@@ -46,6 +47,8 @@ public class SubtaskHandler extends BaseHttpHandler {
             }
         } catch (JsonSyntaxException exception) {
             sendBadRequest(exchange, "Invalid JSON");
+        } catch (NotFoundException exception) {
+            sendNotFound(exchange, exception.getMessage());
         } catch (IllegalArgumentException exception) {
             sendHasInteractions(exchange);
         } catch (Exception exception) {
@@ -62,12 +65,8 @@ public class SubtaskHandler extends BaseHttpHandler {
     private void handleGetSubtaskById(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, SUBTASK_BY_ID_PATTERN);
         Subtask subtask = taskManager.getSubtask(id);
-        if (subtask != null) {
-            String response = gson.toJson(subtask);
-            sendText(exchange, response);
-        } else {
-            sendNotFound(exchange);
-        }
+        String response = gson.toJson(subtask);
+        sendText(exchange, response);
     }
 
     private void handlePostSubtask(HttpExchange exchange) throws IOException {
@@ -78,15 +77,11 @@ public class SubtaskHandler extends BaseHttpHandler {
         if (subtaskId == 0) {
             Integer createdSubtaskId = taskManager.addNewSubtask(subtask);
             if (createdSubtaskId == null) {
-                sendNotFound(exchange);
+                sendBadRequest(exchange);
             } else {
                 sendSuccess(exchange);
             }
         } else {
-            Subtask existingSubtask = taskManager.getSubtask(subtaskId);
-            if (existingSubtask == null) {
-                sendNotFound(exchange);
-            }
             taskManager.updateSubtask(subtask);
             sendSuccess(exchange);
         }
@@ -94,12 +89,7 @@ public class SubtaskHandler extends BaseHttpHandler {
 
     private void handleDeleteSubtask(HttpExchange exchange) throws IOException {
         int subtaskId = extractPathId(exchange, SUBTASK_BY_ID_PATTERN);
-        Subtask task = taskManager.getSubtask(subtaskId);
-        if (task == null) {
-            sendNotFound(exchange);
-        } else {
-            taskManager.deleteSubtask(subtaskId);
-            sendSuccess(exchange);
-        }
+        taskManager.deleteSubtask(subtaskId);
+        sendSuccess(exchange);
     }
 }

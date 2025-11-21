@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.api.handlers;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
@@ -51,8 +52,10 @@ public class EpicHandler extends BaseHttpHandler {
             }
         } catch (JsonSyntaxException exception) {
             sendBadRequest(exchange, "Invalid JSON");
+        } catch (NotFoundException exception) {
+            sendNotFound(exchange, exception.getMessage());
         } catch (IllegalArgumentException exception) {
-            sendBadRequest(exchange);
+            sendBadRequest(exchange, exception.getMessage());
         } catch (Exception exception) {
             sendServerError(exchange);
         }
@@ -67,24 +70,16 @@ public class EpicHandler extends BaseHttpHandler {
     private void handleGetEpicById(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, EPIC_BY_ID_PATTERN);
         Epic epic = taskManager.getEpic(id);
-        if (epic != null) {
-            String response = gson.toJson(epic);
-            sendText(exchange, response);
-        } else {
-            sendNotFound(exchange);
-        }
+        String response = gson.toJson(epic);
+        sendText(exchange, response);
+        sendNotFound(exchange);
     }
 
     private void handleGetSubtasksByEpicId(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, EPIC_BY_ID_SUBTASK_PATTERN);
-        Epic epic = taskManager.getEpic(id);
-        if (epic != null) {
-            List<Subtask> subtasks = taskManager.getEpicSubtasks(id);
-            String response = gson.toJson(subtasks);
-            sendText(exchange, response);
-        } else {
-            sendNotFound(exchange);
-        }
+        List<Subtask> subtasks = taskManager.getEpicSubtasks(id);
+        String response = gson.toJson(subtasks);
+        sendText(exchange, response);
     }
 
     private void handlePostEpic(HttpExchange exchange) throws IOException {
@@ -99,11 +94,6 @@ public class EpicHandler extends BaseHttpHandler {
             taskManager.addNewEpic(epic);
             sendSuccess(exchange);
         } else {
-            Epic existingEpic = taskManager.getEpic(epicId);
-            if (existingEpic == null) {
-                sendNotFound(exchange);
-                return;
-            }
             taskManager.updateEpic(epic);
             sendSuccess(exchange);
         }
@@ -111,12 +101,7 @@ public class EpicHandler extends BaseHttpHandler {
 
     private void handleDeleteEpic(HttpExchange exchange) throws IOException {
         int epicId = extractPathId(exchange, EPIC_BY_ID_PATTERN);
-        Epic task = taskManager.getEpic(epicId);
-        if (task == null) {
-            sendNotFound(exchange);
-        } else {
-            taskManager.deleteEpic(epicId);
-            sendSuccess(exchange);
-        }
+        taskManager.deleteEpic(epicId);
+        sendSuccess(exchange);
     }
 }

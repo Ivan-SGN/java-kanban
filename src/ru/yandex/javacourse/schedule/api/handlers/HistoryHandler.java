@@ -7,7 +7,6 @@ import ru.yandex.javacourse.schedule.tasks.Task;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HistoryHandler extends BaseHttpHandler {
@@ -28,7 +27,7 @@ public class HistoryHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        HistoryEndpoint endpoint = resolveEndpoint(exchange);
+        HistoryEndpoint endpoint = resolveEndpoint(exchange, routes, HistoryEndpoint.UNKNOWN);
         try {
             switch (endpoint) {
                 case GET_HISTORY -> handleGetHistory(exchange);
@@ -37,20 +36,6 @@ public class HistoryHandler extends BaseHttpHandler {
         } catch (Exception exception) {
             sendServerError(exchange);
         }
-    }
-
-    private HistoryEndpoint resolveEndpoint(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        for (Route<HistoryEndpoint> route : routes) {
-            if (route.method().equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern().matcher(path);
-                if (matcher.matches()) {
-                    return route.endpoint();
-                }
-            }
-        }
-        return HistoryEndpoint.UNKNOWN;
     }
 
     private void handleGetHistory(HttpExchange exchange) throws IOException {

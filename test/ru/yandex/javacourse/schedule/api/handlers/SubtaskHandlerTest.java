@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.api.handlers;
 import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.Test;
 import ru.yandex.javacourse.schedule.api.HttpTaskServerTest;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.tasks.Epic;
 import ru.yandex.javacourse.schedule.tasks.Subtask;
 import ru.yandex.javacourse.schedule.tasks.TaskStatus;
@@ -135,7 +136,6 @@ class SubtaskHandlerTest extends HttpTaskServerTest {
                 .build();
 
         HttpResponse<String> missingEpicResponse = httpClient.send(missingEpicRequest, HttpResponse.BodyHandlers.ofString());
-
         assertEquals(404, missingEpicResponse.statusCode());
     }
 
@@ -201,7 +201,8 @@ class SubtaskHandlerTest extends HttpTaskServerTest {
         HttpResponse<String> response = httpClient.send(updateRequest, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode());
-        assertNull(taskManager.getSubtask(nonExistingSubtaskId));
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getSubtask(nonExistingSubtaskId));
     }
 
     @Test
@@ -217,7 +218,8 @@ class SubtaskHandlerTest extends HttpTaskServerTest {
         HttpResponse<String> response = httpClient.send(deleteRequest, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(201, response.statusCode());
-        assertNull(taskManager.getSubtask(subtaskId));
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getSubtask(subtaskId));
     }
 
     @Test

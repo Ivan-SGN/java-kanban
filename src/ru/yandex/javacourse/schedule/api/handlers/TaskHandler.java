@@ -3,6 +3,7 @@ package ru.yandex.javacourse.schedule.api.handlers;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
+import ru.yandex.javacourse.schedule.exceptions.NotFoundException;
 import ru.yandex.javacourse.schedule.manager.TaskManager;
 import ru.yandex.javacourse.schedule.tasks.Task;
 
@@ -46,6 +47,8 @@ public class TaskHandler extends BaseHttpHandler {
             }
         } catch (JsonSyntaxException exception) {
             sendBadRequest(exchange, "Invalid JSON");
+        } catch (NotFoundException exception) {
+            sendNotFound(exchange, exception.getMessage());
         } catch (IllegalArgumentException exception) {
             sendHasInteractions(exchange);
         } catch (Exception exception) {
@@ -62,12 +65,8 @@ public class TaskHandler extends BaseHttpHandler {
     private void handleGetTaskById(HttpExchange exchange) throws IOException {
         int id = extractPathId(exchange, TASK_BY_ID_PATTERN);
         Task task = taskManager.getTask(id);
-        if (task != null) {
-            String response = gson.toJson(task);
-            sendText(exchange, response);
-        } else {
-            sendNotFound(exchange);
-        }
+        String response = gson.toJson(task);
+        sendText(exchange, response);
     }
 
     private void handlePostTask(HttpExchange exchange) throws IOException {
@@ -82,11 +81,6 @@ public class TaskHandler extends BaseHttpHandler {
             taskManager.addNewTask(task);
             sendSuccess(exchange);
         } else {
-            Task existingTask = taskManager.getTask(taskId);
-            if (existingTask == null) {
-                sendNotFound(exchange);
-                return;
-            }
             taskManager.updateTask(task);
             sendSuccess(exchange);
         }
@@ -94,12 +88,7 @@ public class TaskHandler extends BaseHttpHandler {
 
     private void handleDeleteTask(HttpExchange exchange) throws IOException {
         int taskId = extractPathId(exchange, TASK_BY_ID_PATTERN);
-        Task task = taskManager.getTask(taskId);
-        if (task == null) {
-            sendNotFound(exchange);
-        } else {
-            taskManager.deleteTask(taskId);
-            sendSuccess(exchange);
-        }
+        taskManager.deleteTask(taskId);
+        sendSuccess(exchange);
     }
 }

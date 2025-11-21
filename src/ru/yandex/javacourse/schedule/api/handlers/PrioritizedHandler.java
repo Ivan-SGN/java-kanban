@@ -7,7 +7,6 @@ import ru.yandex.javacourse.schedule.tasks.Task;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PrioritizedHandler extends BaseHttpHandler {
@@ -28,7 +27,7 @@ public class PrioritizedHandler extends BaseHttpHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        PrioritizedEndpoint endpoint = resolveEndpoint(exchange);
+        PrioritizedEndpoint endpoint = resolveEndpoint(exchange, routes, PrioritizedEndpoint.UNKNOWN);
         try {
             switch (endpoint) {
                 case GET_PRIORITIZED -> handleGetPrioritized(exchange);
@@ -37,20 +36,6 @@ public class PrioritizedHandler extends BaseHttpHandler {
         } catch (Exception exception) {
             sendServerError(exchange);
         }
-    }
-
-    private PrioritizedEndpoint resolveEndpoint(HttpExchange exchange) {
-        String method = exchange.getRequestMethod();
-        String path = exchange.getRequestURI().getPath();
-        for (Route<PrioritizedEndpoint> route : routes) {
-            if (route.method().equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern().matcher(path);
-                if (matcher.matches()) {
-                    return route.endpoint();
-                }
-            }
-        }
-        return PrioritizedEndpoint.UNKNOWN;
     }
 
     private void handleGetPrioritized(HttpExchange exchange) throws IOException {
