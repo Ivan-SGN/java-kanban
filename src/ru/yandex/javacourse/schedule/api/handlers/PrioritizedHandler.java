@@ -12,14 +12,9 @@ import java.util.regex.Pattern;
 
 public class PrioritizedHandler extends BaseHttpHandler {
     private static final Pattern PRIORITIZED_ROOT_PATTERN = Pattern.compile("^/prioritized/?$");
-    private final TaskManager taskManager;
-    private final Gson gson;
 
-    private record Route(String method, Pattern pattern, PrioritizedEndpoint endpoint) {
-    }
-
-    private final List<Route> routes = List.of(
-            new Route("GET", PRIORITIZED_ROOT_PATTERN, PrioritizedEndpoint.GET_PRIORITIZED)
+    private final List<Route<PrioritizedEndpoint>> routes = List.of(
+            new Route<>("GET", PRIORITIZED_ROOT_PATTERN, PrioritizedEndpoint.GET_PRIORITIZED)
     );
 
     private enum PrioritizedEndpoint {
@@ -28,8 +23,7 @@ public class PrioritizedHandler extends BaseHttpHandler {
     }
 
     public PrioritizedHandler(TaskManager taskManager, Gson gson) {
-        this.taskManager = taskManager;
-        this.gson = gson;
+        super(taskManager, gson);
     }
 
     @Override
@@ -48,11 +42,11 @@ public class PrioritizedHandler extends BaseHttpHandler {
     private PrioritizedEndpoint resolveEndpoint(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        for (Route route : routes) {
-            if (route.method.equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern.matcher(path);
+        for (Route<PrioritizedEndpoint> route : routes) {
+            if (route.method().equalsIgnoreCase(method)) {
+                Matcher matcher = route.pattern().matcher(path);
                 if (matcher.matches()) {
-                    return route.endpoint;
+                    return route.endpoint();
                 }
             }
         }

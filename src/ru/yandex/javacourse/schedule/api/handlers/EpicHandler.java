@@ -16,18 +16,16 @@ public class EpicHandler extends BaseHttpHandler {
     private static final Pattern EPIC_ROOT_PATTERN = Pattern.compile("^/epics/?$");
     private static final Pattern EPIC_BY_ID_PATTERN = Pattern.compile("^/epics/(\\d+)$");
     private static final Pattern EPIC_BY_ID_SUBTASK_PATTERN = Pattern.compile("^/epics/(\\d+)/subtasks/?$");
-    private final TaskManager taskManager;
-    private final Gson gson;
 
-    private record Route(String method, Pattern pattern, EpicEndpoint endpoint) {
+    private record Route<EpicEndpoint>(String method, Pattern pattern, EpicEndpoint endpoint) {
     }
 
-    private final List<Route> routes = List.of(
-            new Route("GET", EPIC_ROOT_PATTERN, EpicEndpoint.GET_ALL_EPICS),
-            new Route("GET", EPIC_BY_ID_PATTERN, EpicEndpoint.GET_EPIC_BY_ID),
-            new Route("GET", EPIC_BY_ID_SUBTASK_PATTERN, EpicEndpoint.GET_SUBTASKS_BY_EPIC_ID),
-            new Route("POST", EPIC_ROOT_PATTERN, EpicEndpoint.POST_EPIC),
-            new Route("DELETE", EPIC_BY_ID_PATTERN, EpicEndpoint.DELETE_EPIC_BY_ID)
+    private final List<Route<EpicEndpoint>> routes = List.of(
+            new Route<>("GET", EPIC_ROOT_PATTERN, EpicEndpoint.GET_ALL_EPICS),
+            new Route<>("GET", EPIC_BY_ID_PATTERN, EpicEndpoint.GET_EPIC_BY_ID),
+            new Route<>("GET", EPIC_BY_ID_SUBTASK_PATTERN, EpicEndpoint.GET_SUBTASKS_BY_EPIC_ID),
+            new Route<>("POST", EPIC_ROOT_PATTERN, EpicEndpoint.POST_EPIC),
+            new Route<>("DELETE", EPIC_BY_ID_PATTERN, EpicEndpoint.DELETE_EPIC_BY_ID)
     );
 
     private enum EpicEndpoint {
@@ -40,8 +38,7 @@ public class EpicHandler extends BaseHttpHandler {
     }
 
     public EpicHandler(TaskManager taskManager, Gson gson) {
-        this.taskManager = taskManager;
-        this.gson = gson;
+        super(taskManager, gson);
     }
 
     @Override
@@ -68,11 +65,11 @@ public class EpicHandler extends BaseHttpHandler {
     private EpicEndpoint resolveEndpoint(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        for (Route route : routes) {
-            if (route.method.equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern.matcher(path);
+        for (Route<EpicEndpoint> route : routes) {
+            if (route.method().equalsIgnoreCase(method)) {
+                Matcher matcher = route.pattern().matcher(path);
                 if (matcher.matches()) {
-                    return route.endpoint;
+                    return route.endpoint();
                 }
             }
         }

@@ -1,7 +1,9 @@
 package ru.yandex.javacourse.schedule.api.handlers;
 
+import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import ru.yandex.javacourse.schedule.manager.TaskManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,16 @@ import java.util.regex.Pattern;
 
 public abstract class BaseHttpHandler implements HttpHandler {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
+    protected final TaskManager taskManager;
+    protected final Gson gson;
+
+    protected record Route<E>(String method, Pattern pattern, E endpoint) {
+    }
+
+    protected BaseHttpHandler(TaskManager taskManager, Gson gson) {
+        this.taskManager = taskManager;
+        this.gson = gson;
+    }
 
     public void sendText(HttpExchange httpExchange, String text) throws IOException {
         sendText(httpExchange, text, 200);

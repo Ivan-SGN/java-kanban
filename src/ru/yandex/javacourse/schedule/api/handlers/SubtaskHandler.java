@@ -14,17 +14,15 @@ import java.util.regex.Pattern;
 public class SubtaskHandler extends BaseHttpHandler {
     private static final Pattern SUBTASK_ROOT_PATTERN = Pattern.compile("^/subtasks/?$");
     private static final Pattern SUBTASK_BY_ID_PATTERN = Pattern.compile("^/subtasks/(\\d+)$");
-    private final TaskManager taskManager;
-    private final Gson gson;
 
-    private record Route(String method, Pattern pattern, SubtaskEndpoint endpoint) {
+    private record Route<SubtaskEndpoint>(String method, Pattern pattern, SubtaskEndpoint endpoint) {
     }
 
-    private final List<Route> routes = List.of(
-            new Route("GET", SUBTASK_ROOT_PATTERN, SubtaskEndpoint.GET_ALL_SUBTASKS),
-            new Route("GET", SUBTASK_BY_ID_PATTERN, SubtaskEndpoint.GET_SUBTASK_BY_ID),
-            new Route("POST", SUBTASK_ROOT_PATTERN, SubtaskEndpoint.POST_SUBTASK),
-            new Route("DELETE", SUBTASK_BY_ID_PATTERN, SubtaskEndpoint.DELETE_SUBTASK_BY_ID)
+    private final List<Route<SubtaskEndpoint>> routes = List.of(
+            new Route<>("GET", SUBTASK_ROOT_PATTERN, SubtaskEndpoint.GET_ALL_SUBTASKS),
+            new Route<>("GET", SUBTASK_BY_ID_PATTERN, SubtaskEndpoint.GET_SUBTASK_BY_ID),
+            new Route<>("POST", SUBTASK_ROOT_PATTERN, SubtaskEndpoint.POST_SUBTASK),
+            new Route<>("DELETE", SUBTASK_BY_ID_PATTERN, SubtaskEndpoint.DELETE_SUBTASK_BY_ID)
     );
 
     private enum SubtaskEndpoint {
@@ -36,8 +34,7 @@ public class SubtaskHandler extends BaseHttpHandler {
     }
 
     public SubtaskHandler(TaskManager taskManager, Gson gson) {
-        this.taskManager = taskManager;
-        this.gson = gson;
+        super(taskManager, gson);
     }
 
     @Override
@@ -63,11 +60,11 @@ public class SubtaskHandler extends BaseHttpHandler {
     private SubtaskEndpoint resolveEndpoint(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        for (Route route : routes) {
-            if (route.method.equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern.matcher(path);
+        for (Route<SubtaskEndpoint> route : routes) {
+            if (route.method().equalsIgnoreCase(method)) {
+                Matcher matcher = route.pattern().matcher(path);
                 if (matcher.matches()) {
-                    return route.endpoint;
+                    return route.endpoint();
                 }
             }
         }

@@ -14,17 +14,12 @@ import java.util.regex.Pattern;
 public class TaskHandler extends BaseHttpHandler {
     private static final Pattern TASK_ROOT_PATTERN = Pattern.compile("^/tasks/?$");
     private static final Pattern TASK_BY_ID_PATTERN = Pattern.compile("^/tasks/(\\d+)$");
-    private final TaskManager taskManager;
-    private final Gson gson;
 
-    private record Route(String method, Pattern pattern, TaskEndpoint endpoint) {
-    }
-
-    private final List<Route> routes = List.of(
-            new Route("GET", TASK_ROOT_PATTERN, TaskEndpoint.GET_ALL_TASKS),
-            new Route("GET", TASK_BY_ID_PATTERN, TaskEndpoint.GET_TASK_BY_ID),
-            new Route("POST", TASK_ROOT_PATTERN, TaskEndpoint.POST_TASK),
-            new Route("DELETE", TASK_BY_ID_PATTERN, TaskEndpoint.DELETE_TASK_BY_ID)
+    private final List<Route<TaskEndpoint>> routes = List.of(
+            new Route<>("GET", TASK_ROOT_PATTERN, TaskEndpoint.GET_ALL_TASKS),
+            new Route<>("GET", TASK_BY_ID_PATTERN, TaskEndpoint.GET_TASK_BY_ID),
+            new Route<>("POST", TASK_ROOT_PATTERN, TaskEndpoint.POST_TASK),
+            new Route<>("DELETE", TASK_BY_ID_PATTERN, TaskEndpoint.DELETE_TASK_BY_ID)
     );
 
     private enum TaskEndpoint {
@@ -36,8 +31,7 @@ public class TaskHandler extends BaseHttpHandler {
     }
 
     public TaskHandler(TaskManager taskManager, Gson gson) {
-        this.taskManager = taskManager;
-        this.gson = gson;
+        super(taskManager, gson);
     }
 
     @Override
@@ -63,11 +57,11 @@ public class TaskHandler extends BaseHttpHandler {
     private TaskEndpoint resolveEndpoint(HttpExchange exchange) {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        for (Route route : routes) {
-            if (route.method.equalsIgnoreCase(method)) {
-                Matcher matcher = route.pattern.matcher(path);
+        for (Route<TaskEndpoint> route : routes) {
+            if (route.method().equalsIgnoreCase(method)) {
+                Matcher matcher = route.pattern().matcher(path);
                 if (matcher.matches()) {
-                    return route.endpoint;
+                    return route.endpoint();
                 }
             }
         }
